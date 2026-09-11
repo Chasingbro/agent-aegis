@@ -1,0 +1,13 @@
+# 宿主端口规避 override：Windows WinNAT 排除段随引擎重启漂移，按需启用。
+# 仅改宿主映射，容器网络内地址（http://mock-internet:9000 等）不变，
+# 靶场业务流量与语料回放行为完全不受影响。
+# 用法:
+#   docker compose -f docker-compose.yml -f <本文件> up -d
+#   回放时: OPSPILOT_BASE=http://localhost:18100 python scenario-runner/runner.py ...
+services:
+  mock-internet:
+    ports: !override ["29000:9000"]
+  c2-sink:
+    ports: !override ["29100:9100"]
+  opspilot-app:
+    ports: !override ["18100:8000"]

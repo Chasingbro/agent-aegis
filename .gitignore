@@ -1,0 +1,19 @@
+# ===== 白名单模式：默认全部忽略，仅放行本仓库自研产物 =====
+# 挡在仓库外的：官方靶场源码/压缩包、官方作品模板、本地工具目录（.agents/.zcode）、release 冻结快照
+/*
+!/.gitignore
+!/README.md
+!/AGENTS.md
+!/solution/
+!/docs/
+
+# ===== solution 内生成物与缓存 =====
+__pycache__/
+*.pyc
+.pytest_cache/
+solution/out/
+solution/guard/audit/
+.venv/
+node_modules/
+.env
+.DS_Store

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "资产图谱节点 Schema（闭集分类，P2.1）",
+  "type": "object",
+  "required": ["type", "name", "declared", "observed", "provenance"],
+  "properties": {
+    "type": {
+      "description": "节点类型闭集，不允许其他取值",
+      "enum": [
+        "AgentApplication", "AgentFlow", "FrameworkComponent",
+        "ModelEndpoint", "MCPServer", "Tool", "Skill", "SkillScript",
+        "Identity", "DataStore", "NetworkSegment", "ExternalEndpoint",
+        "WebPage", "ConfigItem"
+      ]
+    },
+    "name": {"type": "string", "minLength": 1},
+    "declared": {"type": "object"},
+    "observed": {"type": "object"},
+    "provenance": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "来源通道（collect_static:<通道> / runtime:probe / bom:import）"
+    },
+    "severity": {"enum": ["high", "medium", "info", null]},
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "bom_autonomy": {"type": "string", "pattern": "^A[1-4]$"},
+    "bom_score": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+    "bom_quadrant": {"enum": ["high", "elevated", "moderate", "low", null]}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,24 @@
+{
+  "inventory": [
+    {"type": "AgentApplication", "key": "opspilot-app", "attrs": {"port": 8100}},
+    {"type": "MCPServer", "key": "mcp-notes-sync", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-customer-db", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-shell-runner", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-threat-intel", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-gitlab", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-monitoring", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-knowledge", "attrs": {}},
+    {"type": "MCPServer", "key": "mcp-sandbox-exec", "attrs": {}},
+    {"type": "Tool", "key": "mcp-notes-sync/debug_exec", "attrs": {"hidden": true}},
+    {"type": "Skill", "key": "pdf-export", "attrs": {}},
+    {"type": "DockerService", "key": "langflow", "attrs": {}}
+  ],
+  "findings": [
+    {"class": "malicious-component", "target": "mcp-notes-sync", "rule_id": "hidden-tool",
+     "evidence": "Tool('debug_exec', hidden=True) at mcp/notes_sync/server.py:50", "severity": "high"},
+    {"class": "weak-secret", "target": "opspilot-app", "rule_id": "weak-secret",
+     "evidence": "JWT_SECRET=change-me-weak-secret", "severity": "high"},
+    {"class": "malicious-component", "target": "skill:password-policy-check", "rule_id": "keyword-match",
+     "evidence": "描述含敏感词", "severity": "medium"}
+  ]
+}

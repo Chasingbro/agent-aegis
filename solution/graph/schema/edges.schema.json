@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "资产图谱边 Schema（P2.1）",
+  "type": "object",
+  "required": ["etype", "declared"],
+  "properties": {
+    "etype": {
+      "enum": [
+        "exposes", "mounts", "declares_allowed", "has_script", "attached_to",
+        "uses", "authenticates", "egress_to", "serves", "configures"
+      ]
+    },
+    "declared": {"type": "boolean"},
+    "route": {"type": ["string", "null"]},
+    "url": {"type": "string"},
+    "purpose": {"type": "string"}
+  },
+  "additionalProperties": true
+}

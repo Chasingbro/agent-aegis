@@ -1,0 +1,33 @@
+# guard 启用 override：拦截代理上链（不改靶场原文件，按需叠加）。
+# 用法（在靶场目录）:
+#   docker compose -f docker-compose.yml \
+#     -f ../solution/guard/guard-compose.yml \
+#     -f ../solution/runtime/hostport.override.yml up -d --build
+#   回放: OPSPILOT_BASE=http://localhost:18080 python scenario-runner/runner.py ...
+# 模式: guard.environment.GUARD_MODE = off | observe | enforce
+services:
+  guard:
+    build:
+      context: ../solution
+      dockerfile: guard/Dockerfile
+    networks: [opspilot-net]
+    environment:
+      GUARD_MODE: ${GUARD_MODE:-observe}
+      GUARD_NO_BASELINE: ${GUARD_NO_BASELINE:-0}
+      GUARD_JWT_SECRET: change-me-weak-secret
+    volumes:
+      - ../solution/out:/baseline:ro     # baseline.json（policy_baseline 产物）
+      - ../solution/guard/audit:/log     # guard.jsonl 审计落宿主
+    ports: ["18090:8090", "18080:8090"]  # 18090=MCP面/status，18080=编排入口反代
+    depends_on: [opspilot-app]
+
+  opspilot-app:
+    environment:
+      MCP_CUSTOMER_DB: http://guard:8090/mcp/customer-db
+      MCP_SHELL_RUNNER: http://guard:8090/mcp/shell-runner
+      MCP_NOTES_SYNC: http://guard:8090/mcp/notes-sync
+      MCP_THREAT_INTEL: http://guard:8090/mcp/threat-intel
+      MCP_GITLAB: http://guard:8090/mcp/gitlab
+      MCP_MONITORING: http://guard:8090/mcp/monitoring
+      MCP_KNOWLEDGE: http://guard:8090/mcp/knowledge
+      MCP_SANDBOX_EXEC: http://guard:8090/mcp/sandbox-exec

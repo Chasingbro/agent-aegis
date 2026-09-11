@@ -1,0 +1,112 @@
+# =====================================================================
+# 静态检测规则库（外置，v2）
+# 部分模式族改编自 eSentire-Labs/mcp-scanner 的 .nov 规则文件
+# (analyzer_helpers/nova_rules/hidden_instruction_rules.nov 与
+#  variable_poisoning_rules.nov, 仓库已归档、未声明 license, 方法借鉴非代码复制)
+# 其余模式为本项目自研。
+# =====================================================================
+
+# ---- 工具描述/Skill 正文/外部内容源的注入指令结构模式 ----
+injection_patterns:
+  # --- 自研：标记定界 + 隐藏要求（靶场投毒形态） ---
+  - "<IMPORTANT>.*</IMPORTANT>"
+  - "ignore (all )?previous"
+  - "不要向用户提及"
+  - "不要告诉"
+  - "read\\s+/[\\w./-]*\\.env"
+  - "读取\\s*/[\\w./-]*\\.env"
+  - "then\\s+call\\s+\\S+"
+  - "然后调用\\s*\\S+"
+  # --- 借鉴 mcp-scanner hidden_instruction_rules: 隐匿标签族 ---
+  - "<(secret|system|internal|hidden|confidential)>.*</\\1>"
+  - "<s>[^<]*(ignore|override|bypass|hide)[^<]*</s>"
+  - "Internal Use Only"
+  # --- 借鉴 mcp-scanner: 隐匿行为指令（动词组合更宽） ---
+  - "do not (tell|inform|alert|notify|mention) (the )?(user|anyone)"
+  - "hide this (from|information)"
+  - "secret (instructions|commands|directives|notes)"
+  # --- 借鉴 mcp-scanner: 越狱/角色操纵组合 ---
+  - "(ignore|disregard|bypass|override) (all|previous|system) (instructions|guidelines|rules)"
+  - "act as if you are (unrestricted|jailbroken)"
+  - "(enable|activate) (developer|god|admin) mode"
+  - "your new (prompt|instructions|role) is"
+  - "you are now"
+  - "from now on you are"
+  # --- 借鉴 mcp-scanner: 凭据提取/认证绕过 ---
+  - "(extract|steal|access|retrieve).{0,40}(credentials|passwords|tokens|keys|secrets)"
+  - "(bypass|skip|ignore).{0,30}(auth|authentication)"
+  # --- 借鉴 mcp-scanner: 路径穿越序列 ---
+  - "\\.\\.[/\\\\]+[\\w./-]*\\.(env|key|cfg|conf|json)"
+
+# ---- 变量投毒二维模式（借鉴 mcp-scanner variable_poisoning_rules: 动词x目标） ----
+variable_poisoning_patterns:
+  - "\\b(system|internal|backend|core|kernel) ?(access|extract|dump|expose|reveal)\\b"
+  - "\\b(admin|root|superuser) ?(access|privileges|rights|credentials)\\b"
+  - "\\b(memory|context) ?(dump|extract|hijack|override|replace)\\b"
+  - "\\b(model|assistant|llm) ?(name|version|identity|configuration)\\b"
+  - "\\b(all|every|complete|entire) ?(tools|functions|capabilities)\\b"
+  - "\\b(access|read|extract) ?(ssh|private.?key|config\\.json)\\b"
+
+# ---- ANSI 隐形文本（借鉴 mcp-scanner: 白底白字转义序列，本项为完全新增维度） ----
+ansi_invisible_patterns:
+  - "\\x1b\\[37;47m"
+  - "\\x1b\\[38;5;15;48;5;15m"
+  - "\\x1b\\[38;2;255;255;255"
+  - "\\x1b\\[48;2;255;255;255"
+
+# ---- 弱密钥/弱口令取值模式（自研） ----
+weak_value_patterns:
+  - "change[-_]?me"
+  - "weak"
+  - "^admin$"
+  - "^password$"
+  - "^test$"
+  - "^demo$"
+  - "^secret$"
+  - "^1234"
+  - "sk-stub"
+  - "all-access"
+
+# ---- Base64 载荷解码后的危险模式（自研） ----
+dangerous_decoded_patterns:
+  - "subprocess"
+  - "os\\.system"
+  - "curl\\s+https?://"
+  - "\\|\\s*sh\\b"
+  - "http://"
+  - "exec\\("
+  - "eval\\("
+  - "b64decode"
+
+# ---- 知名 MCP 服务器名单（借鉴 mcp-scanner cross_origin_analyzer 的内置名单思路） ----
+popular_mcp_servers:
+  - filesystem
+  - github
+  - gitlab
+  - slack
+  - postgres
+  - sqlite
+  - puppeteer
+  - brave-search
+  - memory
+  - sequential-thinking
+  - google-drive
+  - google-maps
+  - fetch
+
+# ---- 名称相似度混淆阈值（借鉴 mcp-scanner: 0.9 相似度判 typosquatting） ----
+name_similarity_threshold: 0.9
+
+# ---- 本地漏洞公告库（OSV 简化版，正式版外置 advisories/*.json） ----
+advisories:
+  langflow:
+    - id: CVE-2026-0770
+      cwe: CWE-94
+      type: 代码注入
+      summary: validate/code 默认参数表达式求值导致任意命令执行
+      versions: ["1.8.4"]
+    - id: CVE-2026-5027
+      cwe: CWE-434
+      type: 上传/路径穿越
+      summary: filename 路径穿越写 /etc/cron.d 触发定时 RCE
+      versions: ["1.8.4"]

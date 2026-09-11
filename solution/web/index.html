@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentRange 资产风险图谱</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel2: #273449; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+    --high: #ef4444; --medium: #f59e0b; --info: #64748b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text);
+         font-family: "Segoe UI", "Microsoft YaHei", sans-serif; height: 100vh;
+         display: flex; flex-direction: column; overflow: hidden; }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 20px;
+           background: var(--panel); border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  nav { display: flex; gap: 4px; margin-left: 24px; }
+  nav button { background: none; border: 1px solid transparent; color: var(--muted);
+               padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  nav button.active { background: var(--panel2); color: var(--accent);
+                      border-color: var(--accent); }
+  .stats { margin-left: auto; display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+  .stats b { color: var(--text); font-size: 14px; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #view-graph, #view-bom, #view-risks { flex: 1; display: none; min-height: 0; }
+  #view-graph.view-active, #view-bom.view-active, #view-risks.view-active {
+    display: flex; }
+  #filters { width: 210px; padding: 14px; background: var(--panel);
+             border-right: 1px solid var(--border); overflow-y: auto; font-size: 12px; }
+  #filters h3 { font-size: 12px; color: var(--muted); margin: 12px 0 8px;
+                text-transform: uppercase; letter-spacing: 1px; }
+  #filters label { display: flex; align-items: center; gap: 7px; padding: 3px 0;
+                   cursor: pointer; color: var(--text); }
+  #filters .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  #cy { flex: 1; min-width: 0; }
+  #sidebar { width: 330px; background: var(--panel); border-left: 1px solid var(--border);
+             padding: 16px; overflow-y: auto; font-size: 13px; display: none; }
+  #sidebar h2 { font-size: 15px; margin-bottom: 4px; }
+  #sidebar .tag { display: inline-block; padding: 1px 8px; border-radius: 10px;
+                  font-size: 11px; margin: 2px 4px 8px 0; background: var(--panel2); }
+  #sidebar section { margin-top: 14px; }
+  #sidebar section h4 { color: var(--accent); font-size: 12px; margin-bottom: 6px; }
+  #sidebar pre { background: var(--bg); padding: 8px; border-radius: 6px;
+                 font-size: 11px; overflow-x: auto; white-space: pre-wrap; color: var(--muted); }
+  .sev-high { color: var(--high); } .sev-medium { color: var(--medium); }
+  .sev-info { color: var(--info); }
+  /* BOM 视图 */
+  #view-bom { overflow-y: auto; padding: 20px; gap: 20px; flex-direction: column;
+              align-items: flex-start; }
+  .agent-card { background: var(--panel); border: 1px solid var(--border);
+                border-radius: 10px; padding: 20px; width: 100%; max-width: 1100px; }
+  .agent-card h2 { font-size: 16px; display: flex; align-items: center; gap: 12px; }
+  .badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+  .badge.high { background: #7f1d1d; color: #fecaca; }
+  .badge.elevated { background: #78350f; color: #fde68a; }
+  .badge.moderate { background: #1e3a5f; color: #bfdbfe; }
+  .badge.low { background: #14532d; color: #bbf7d0; }
+  .score-line { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+  .score-bar { flex: 1; height: 10px; background: var(--panel2); border-radius: 5px;
+               overflow: hidden; max-width: 420px; }
+  .score-bar i { display: block; height: 100%;
+                 background: linear-gradient(90deg, #f59e0b, #ef4444); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+  .kv h4, .tools-t h4, .ctrl h4 { color: var(--accent); font-size: 12px; margin-bottom: 6px; }
+  .kv ul, .ctrl ul { list-style: none; font-size: 12.5px; }
+  .kv li { padding: 3px 0; border-bottom: 1px dashed var(--border); }
+  .kv li span { color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 4px 8px;
+       border-bottom: 1px solid var(--border); }
+  td { padding: 4px 8px; border-bottom: 1px dashed var(--border); }
+  .tier { display: inline-block; min-width: 34px; text-align: center; padding: 1px 6px;
+          border-radius: 4px; font-weight: 600; font-size: 11px; }
+  .t1 { background: #14532d; } .t2 { background: #166534; } .t3 { background: #92400e; }
+  .t4 { background: #9f1239; } .t5 { background: #7f1d1d; }
+  .warn { color: var(--high); }
+  /* 风险视图 */
+  #view-risks { flex-direction: column; overflow: hidden; }
+  #risk-toolbar { padding: 12px 20px; display: flex; gap: 10px; align-items: center;
+                  border-bottom: 1px solid var(--border); font-size: 13px; }
+  #risk-toolbar select, #risk-toolbar input { background: var(--panel2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; }
+  #risk-list { flex: 1; overflow-y: auto; padding: 14px 20px; }
+  .risk-item { background: var(--panel); border: 1px solid var(--border);
+               border-left: 3px solid var(--info); border-radius: 8px;
+               padding: 10px 14px; margin-bottom: 8px; font-size: 13px; }
+  .risk-item.high { border-left-color: var(--high); }
+  .risk-item.medium { border-left-color: var(--medium); }
+  .risk-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .risk-head b { color: var(--accent); font-family: Consolas, monospace; }
+  .risk-item .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .risk-item .gt { color: #a5b4fc; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AgentRange 资产风险图谱</h1>
+  <span class="sub">静态采集 → 知识图谱 → AgentRiskBOM → 包络校验</span>
+  <nav>
+    <button data-view="graph" class="active">资产图谱</button>
+    <button data-view="bom">权限包络 (BOM)</button>
+    <button data-view="risks">风险与控制</button>
+  </nav>
+  <div class="stats" id="stats"></div>
+</header>
+<main>
+  <div id="view-graph" class="view-active">
+    <div id="filters">
+      <h3>资产类型</h3>
+      <div id="type-filters"></div>
+      <h3>严重度</h3>
+      <label><input type="checkbox" class="sev-filter" value="high" checked> 高危</label>
+      <label><input type="checkbox" class="sev-filter" value="medium" checked> 中危</label>
+      <label><input type="checkbox" class="sev-filter" value="info" checked> 提示</label>
+      <label><input type="checkbox" class="sev-filter" value="none" checked> 无风险</label>
+      <h3>图例</h3>
+      <div style="color:var(--muted);line-height:1.8">
+        红环 = 高危节点<br>橙环 = 中危<br>虚线边框 = 隐藏工具<br>边颜色 = 关系类型
+      </div>
+    </div>
+    <div id="cy"></div>
+    <div id="sidebar"></div>
+  </div>
+  <div id="view-bom"></div>
+  <div id="view-risks">
+    <div id="risk-toolbar">
+      <b>风险发现</b>
+      <select id="risk-source">
+        <option value="all">全部来源</option>
+        <option value="static">采集规则</option>
+        <option value="envelope">包络校验</option>
+        <option value="runtime">运行时实证</option>
+        <option value="validator">完整性校验</option>
+      </select>
+      <select id="risk-sev">
+        <option value="all">全部严重度</option>
+        <option value="high">仅高危</option>
+        <option value="medium">仅中危</option>
+      </select>
+      <input id="risk-q" placeholder="搜索规则/目标/标签...">
+    </div>
+    <div id="risk-list"></div>
+  </div>
+</main>
+<script src="/vendor/cytoscape.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
