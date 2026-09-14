@@ -1,9 +1,9 @@
 # ===== 白名单模式：默认全部忽略，仅放行本仓库自研产物 =====
-# 挡在仓库外的：官方靶场源码/压缩包、官方作品模板、本地工具目录（.agents/.zcode）、release 冻结快照
+# 挡在仓库外的：官方靶场源码/压缩包、官方作品模板、本地工具目录（.agents/.zcode）、
+#               release 冻结快照、AGENTS.md（本地 Agent 上下文，含内部信息，不入库）
 /*
 !/.gitignore
 !/README.md
-!/AGENTS.md
 !/solution/
 !/docs/
 
