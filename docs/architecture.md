@@ -92,10 +92,11 @@ last_updated: 2026-09-11
 | 差分引擎 | bom/diff.py | ① 版本变异 diff（10 变异测试）② **declared-vs-observed 三类异常** | 10/10 + 4 异常 |
 | 包络校验 | graph/rules.py | 12 条 ENV 规则（图遍历推导，与静态规则独立） | 12/12 标准答案覆盖 |
 | 导入器 | bom/importer.py | BOM → 图 upsert + round-trip 校验 | 通过 |
-| 服务端 | server/app.py | /api/graph /bom /risks(三来源) /summary | 35 findings |
+| 服务端 | server/app.py | /api/graph /bom /risks(四来源) /summary /baseline /judge /artifacts | 35 findings |
 | 前端 | web/ | 三视图 + observed 侧栏 + 来源标签 | 目视验收通过 |
+| 拦截代理 | guard/app.py | MCP tools/call 逐事件判定 + 身份绑定 + 阻断 + JSONL 审计（v1.0-asset-guard） | 56/56 阻断、0 误报 |
 | 编排 | cli.py | 六步流水线 + 单步 + serve | 全绿；runtime 步可优雅跳过 |
-| 测试 | tests/ | 单元 + 回归 + integration（无 Docker 跳过） | 8/8 |
+| 测试 | tests/ | 单元 + 回归 + integration（无 Docker 跳过） | 16/16 |
 
 ## 4. 数据流与工件
 
@@ -130,7 +131,8 @@ last_updated: 2026-09-11
 | BOM round-trip | 零丢失 |
 | 风险发现总量 | 35（静态 16 / 包络 15 / 运行时 4） |
 | 观测面覆盖 | 17 节点带 observed facet |
-| 测试 | 8/8（integration 无 Docker 自动跳过） |
+| 测试 | 16/16（integration 无 Docker 自动跳过） |
+| guard 组合评测 | cat2 56/56 检出并阻断；良性 5120 条 0 误报；判定时延 avg 0.052ms |
 
 ## 6. 已知边界（下一步方向）
 

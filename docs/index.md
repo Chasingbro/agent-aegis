@@ -40,7 +40,7 @@ docs/
 |---|---|
 | `solution/README_集成.md` | v1.0-asset 三层融合接口使用说明（L1 工件 / L2 Python 库 / L3 REST），供队友监测系统接入 |
 | `solution/guard/README.md` | 拦截代理架构、启用方式（compose override）、判定信号表、模式开关 |
-| `solution/out/eval/eval_report.md` | 全量 replay 两相评测报告（生成物） |
+| `solution/guard/EVAL_REPORT.md` | 全量 replay 两相评测报告（固化副本；生成物默认落 out/eval/） |
 | `release/v1.0-asset*/`（README、CHANGELOG、快照） | 已交付版本的冻结快照，勿改 |
 
 ## 已知问题
