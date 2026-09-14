@@ -1,13 +1,13 @@
 ---
 type: module
-covers: "揭榜挑战赛赛题2靶场-AgentRange-player/**"
-last_updated: 2026-09-09
+covers: "*AgentRange-player/**"
+last_updated: 2026-09-14
 ---
 
 # OpsPilot 智能体安全靶场（AgentRange）信息整理
 
-> 整理自 `揭榜挑战赛赛题2靶场-AgentRange-player/`（第五届中国研究生网络安全创新大赛 · 揭榜挑战赛赛题 2），
-> 结合 [赛题要求原文](../challenge.md) 与靶场全部源码逐文件梳理。整理日期：2026-09-09。
+> 整理自 `AgentRange-player/`（旧名 `揭榜挑战赛赛题2靶场-AgentRange-player/`；第五届中国研究生网络安全创新大赛 · 揭榜挑战赛赛题 2），
+> 结合 [赛题要求原文](../challenge.md) 与靶场全部源码逐文件梳理。整理日期：2026-09-09，2026-09-14 随目录改名复核。
 
 ---
 
@@ -352,6 +352,10 @@ make replay → generate(seed) 内存生成语料
 
 依赖：Docker + Docker Compose、Python 3.12+、`pip install -r requirements-dev.txt`
 （pytest / httpx / pyjwt / requests / pyyaml，回放与生成脚本用）。
+注意 `make seed` 还需额外装 `psycopg2-binary`（不在官方 requirements-dev.txt 内）。
+
+> **实操步骤、Windows 上无 `make` 时的原生命令替代、场景代号与攻击落地取证，见
+> [range-quickstart.md](range-quickstart.md)。**
 
 ```bash
 cp .env.example .env     # 1. 准备环境变量（含身份/传播等风险配置）
@@ -370,7 +374,7 @@ llm-stub `:8000`，c2-sink `:9100`，mock-internet `:9000`。
 ## 9. 目录结构速查
 
 ```
-揭榜挑战赛赛题2靶场-AgentRange-player/
+AgentRange-player/            # 旧名「揭榜挑战赛赛题2靶场-AgentRange-player」
 ├── docker-compose.yml        # 14 个服务、2 个网络（opspilot-net / egress-net）
 ├── Makefile                  # up/down/generate/seed/smoke/replay/test
 ├── .env.example              # 弱 JWT 密钥、服务账号、Langflow 自动登录等风险配置基线

@@ -14,7 +14,8 @@ from pathlib import Path
 
 SOLUTION = Path(__file__).resolve().parent
 OUT = SOLUTION / "out"
-RANGE = SOLUTION.parent / "揭榜挑战赛赛题2靶场-AgentRange-player"
+sys.path.insert(0, str(SOLUTION))
+from range_root import RANGE  # noqa: E402
 
 
 def run_step(name: str, fn):

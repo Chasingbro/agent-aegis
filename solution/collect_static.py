@@ -26,6 +26,7 @@ import yaml
 
 # 外置规则库（部分模式族改编自 eSentire-Labs/mcp-scanner 的 .nov 规则，见 rules.yaml 标注）
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from range_root import RANGE
 from rules import loader
 
 # ---------------------------------------------------------------- 小工具
@@ -724,8 +725,7 @@ def reconcile(bundle: dict, risks: list[dict]) -> list[tuple]:
 # ---------------------------------------------------------------- 主流程
 
 def main() -> int:
-    root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else \
-        Path(__file__).resolve().parent.parent / "揭榜挑战赛赛题2靶场-AgentRange-player"
+    root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else RANGE
     out_dir = Path(__file__).resolve().parent / "out"
     out_dir.mkdir(exist_ok=True)
 

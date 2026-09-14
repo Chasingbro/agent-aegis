@@ -21,7 +21,8 @@ from collections import defaultdict
 from pathlib import Path
 
 SOLUTION = Path(__file__).resolve().parent.parent
-RANGE = SOLUTION.parent / "揭榜挑战赛赛题2靶场-AgentRange-player"
+sys.path.insert(0, str(SOLUTION))
+from range_root import RANGE  # noqa: E402
 AUDIT = SOLUTION / "guard" / "audit" / "guard.jsonl"
 EVAL = SOLUTION / "out" / "eval"
 COMPOSE = ["docker", "compose", "-f", "docker-compose.yml",

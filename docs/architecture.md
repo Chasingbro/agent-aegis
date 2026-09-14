@@ -1,12 +1,12 @@
 ---
 type: architecture
 covers: "solution/**"
-last_updated: 2026-09-11
+last_updated: 2026-09-14
 ---
 
 # 组件架构文档（当前实现状态）
 
-> 更新：2026-09-11。对应 solution/ 目录代码现状。
+> 更新：2026-09-14。对应 solution/ 目录代码现状。
 > 一句话：**11 条采集通道（8 静态 + 3 运行时）→ 属性图谱（声明/观测双面）→ AgentRiskBOM → 双推理引擎（包络校验 + 声明-观测差分）→ FastAPI + Cytoscape 前端三视图**。
 
 ---
@@ -47,6 +47,8 @@ last_updated: 2026-09-11
 │  前端三视图：资产图谱 / 权限包络(BOM) / 风险与控制（来源三标签）        │
 └─────────────────────────────────────────────────────────────────────┘
 编排：cli.py（scan→graph→bom→import→runtime→verify 六步，可单步执行）
+路径解析：range_root.py —— 靶场根目录唯一入口（`AgentRange-player` / 旧长名回退 + AGENT_RANGE_ROOT 覆盖），
+          采集器 / 库入口 / CLI / guard 评测共用，代码内不再出现硬编码目录名
 ```
 
 ## 2. 采集器清单（11 条通道）
@@ -137,7 +139,7 @@ last_updated: 2026-09-11
 ## 6. 已知边界（下一步方向）
 
 1. 探测为**快照式**；事件级监控（tools/call 拦截代理 + 逐事件差分 + 风险分 + 阻断）已在 v1.0-asset-guard 落地，审计链 STIX 化待做；
-2. 静态采集对靶场路径有依赖（mcp/*/server.py 等），**插件化 + 路径泛化**（原《端到端动态扫描系统计划》P1，该计划原文未归档，仅存引用）未实施；
+2. 静态采集对靶场内部**目录结构**有依赖（mcp/*/server.py 等），**插件化 + 结构泛化**（原《端到端动态扫描系统计划》P1，该计划原文未归档，仅存引用）未实施；靶场**根目录名**依赖已于 2026-09-14 收敛到 `range_root.py`（目录改名不再影响采集）；
 3. runtime findings 目前进 out/runtime/，按 job 隔离未做；
 4. audit 链还原（prompt/tool_calls/函数栈帧）guard JSONL 已覆盖简版，STIX 化未开始。
 

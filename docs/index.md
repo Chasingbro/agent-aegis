@@ -1,7 +1,7 @@
 # 知识库导航
 
 > 本目录是项目唯一知识库（doc-keeper 维护）。**不要再在工作区其他位置新建总结/计划类 md**；
-> 新文档落位后必须回来同步本文件。最后更新：2026-09-11。
+> 新文档落位后必须回来同步本文件。最后更新：2026-09-14。
 
 ## 目录结构
 
@@ -11,27 +11,38 @@ docs/
 ├── challenge.md                        # 赛题要求原文
 ├── architecture.md                     # solution 系统架构（现状）
 ├── modules/
-│   └── range.md                        # 靶场 AgentRange 信息整理（10 章）
+│   ├── range.md                        # 靶场 AgentRange 信息整理（10 章）
+│   ├── range-quickstart.md             # 靶场快速启动与回放实操（实测命令）
+│   └── agent-scanner.md                # 队友项目事实档案（闭集/规则/度量/实测/局限）
 ├── plans/                              # 计划文档（含状态标注）
 │   ├── 资产识别实施计划.md              # 第一阶段 P0-P5（已完成）
 │   ├── 资产识别优化计划清单.md          # 六维度 28 项优化 backlog（进行中）
-│   └── 双版本发布计划.md                # v1.0-asset / v1.0-asset-guard（已完成）
-├── decisions/                          # ADR 技术决策（暂无条目，按 NNN-短标题.md 追加）
+│   ├── 双版本发布计划.md                # v1.0-asset / v1.0-asset-guard（已完成）
+│   └── 融合与测试计划.md                # 与队友 scanner 的同靶对跑、差距、融合与测试（待评审）
+├── decisions/                          # ADR 技术决策（首个条目出现时创建，按 NNN-短标题.md）
 ├── changelog.md                        # 项目统一变更日志
 └── archive/
     └── 资产识别优化清单-设计草稿.md     # 已被正式清单取代的会话草稿
 ```
+
+> 工作区根目录的 `AgentRange-player/`（官方靶场源码，旧名 `揭榜挑战赛赛题2靶场-AgentRange-player/`）
+> 与 `reference/`（队友 `agent-scanner` 项目、官方作品 doc 模板）是**外部材料**：落在 `.gitignore`
+> 白名单之外、不入库，也不属于本知识库；对它们的整理结论写在 [modules/range.md](modules/range.md)
+> 与工作区根的 `AGENTS.md`。
 
 ## 文档索引
 
 | 文档 | 类型/状态 | 内容 |
 |---|---|---|
 | [challenge.md](challenge.md) | 原文 | 赛题两大能力要求与量化指标原文照录 |
-| [architecture.md](architecture.md) | 状态型，2026-09-11 | solution 现状：11 采集通道 → 图谱 → BOM → 双推理引擎 → 服务端/前端，指标与已知边界 |
-| [modules/range.md](modules/range.md) | 状态型，2026-09-09 | 官方靶场逐文件分析：架构、组件、风险/漏洞清单、攻击剧本、语料机制、取证点（静态识别与运行时检测的"标准答案"） |
+| [architecture.md](architecture.md) | 状态型，2026-09-14 | solution 现状：11 采集通道 → 图谱 → BOM → 双推理引擎 → 服务端/前端，指标与已知边界 |
+| [modules/range.md](modules/range.md) | 状态型，2026-09-14 | 官方靶场逐文件分析：架构、组件、风险/漏洞清单、攻击剧本、语料机制、取证点（静态识别与运行时检测的"标准答案"） |
+| [modules/range-quickstart.md](modules/range-quickstart.md) | 操作型，2026-09-14 | 靶场快速启动：依赖、4 步启动、make 的原生命令替代、场景代号与回放、攻击落地取证、guard override、排错表 |
+| [modules/agent-scanner.md](modules/agent-scanner.md) | 状态型，2026-09-14 | 队友项目 agent-scanner 事实档案：架构与数据流、13 类资产 / 9 类边 / 6 检测器、规则三层外置与 bench 度量机制、同靶实测数据、已知局限 |
 | [plans/资产识别实施计划.md](plans/资产识别实施计划.md) | 计划，已完成 | 能力 1 第一阶段：通道矩阵、ground truth、R1/R2/R3 规则、验收与时间线（实际落地差异见文首标注） |
 | [plans/资产识别优化计划清单.md](plans/资产识别优化计划清单.md) | 计划，进行中 | 六维度 28 项优化（采集/Schema/展示/证明/推理/约束）+ 5 个批次建议 + 依赖关系 + 不做清单 |
 | [plans/双版本发布计划.md](plans/双版本发布计划.md) | 计划，已完成 | A 资产识别融合版 + B 拦截代理实验版的交付计划（三层融合接口、评测对比） |
+| [plans/融合与测试计划.md](plans/融合与测试计划.md) | 计划，待评审 | 我方 solution 与队友 agent-scanner 的同靶对跑实测、逐条 ground truth 裁决、11 维度差距、融合方案 A/B、阶段 0-3 测试计划与 9 项验收门禁 |
 | [changelog.md](changelog.md) | 事件型 | v1.0-asset / v1.0-asset-guard 交付记录；新条目追加于此 |
 
 ## 代码随附文档（留在代码目录，不迁入 docs/）

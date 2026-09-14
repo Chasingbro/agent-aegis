@@ -166,7 +166,7 @@ curl -OJ http://127.0.0.1:8080/api/artifacts       # 全工件 zip（L1 工件�
 ### 3.3 B. 拦截代理（需靶场在跑）
 
 ```bash
-cd 揭榜挑战赛赛题2靶场-AgentRange-player
+cd AgentRange-player
 
 # 上链（override 方式，不改靶场原文件）
 docker compose -f docker-compose.yml \
@@ -200,7 +200,9 @@ cd solution && pytest -q     # 单元 + 回归 + 集成（无 Docker 环境自�
 ## 4. 目录结构
 
 ```
-solution/
+AgentRange-player/         # 官方靶场源码（旧名「揭榜挑战赛赛题2靶场-AgentRange-player」）
+solution/                  # 自研算法与系统
+├── range_root.py          # 靶场根目录解析（兼容新旧目录名 / AGENT_RANGE_ROOT）
 ├── collect_static.py      # 8 条静态采集通道 + R1/R2/R3 规则引擎 + 对账
 ├── api.py                 # 库入口：run_all / policy_baseline / judge_events
 ├── cli.py                 # 编排：六步流水线 / 单步 / serve
@@ -219,6 +221,8 @@ solution/
 ├── oracle/                # 评测标准答案与评分脚本
 └── out/                   # 生成物（gitignore：scan/graph/bom/基线/评测数据）
 docs/                      # 项目知识库（导航见 docs/index.md）
+reference/                 # 外部参照物（不入库）：队友 agent-scanner、官方作品模板
+release/                   # 已交付版本冻结快照（不入库，勿改）
 ```
 
 ---

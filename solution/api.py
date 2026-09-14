@@ -14,13 +14,15 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 SOLUTION = Path(__file__).resolve().parent
 OUT = SOLUTION / "out"
-RANGE = SOLUTION.parent / "揭榜挑战赛赛题2靶场-AgentRange-player"
+sys.path.insert(0, str(SOLUTION))
+from range_root import RANGE  # noqa: E402
 
 VERSION = "1.0.0-asset"
 

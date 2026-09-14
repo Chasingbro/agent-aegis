@@ -19,7 +19,7 @@ opspilot-app ──MCP_*──► guard /mcp/{server} ──转发──► 真�
 ## 启用（不改靶场原文件）
 
 ```bash
-cd 揭榜挑战赛赛题2靶场-AgentRange-player
+cd AgentRange-player
 docker compose -f docker-compose.yml \
   -f ../solution/guard/guard-compose.yml \
   -f ../solution/runtime/hostport.override.yml up -d --build
