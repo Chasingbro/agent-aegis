@@ -143,4 +143,6 @@ last_updated: 2026-09-14
 3. runtime findings 目前进 out/runtime/，按 job 隔离未做；
 4. audit 链还原（prompt/tool_calls/函数栈帧）guard JSONL 已覆盖简版，STIX 化未开始。
 
-> 后续优化项的完整排期见 [《资产识别优化计划清单》](plans/资产识别优化计划清单.md)（六维度 28 项 + 批次建议）。
+> 后续优化项的完整排期见 [《资产识别优化计划清单》](plans/资产识别优化计划清单.md)（六维度 28 项 + 批次建议）；
+> 把本系统跑起来的实操步骤（依赖、`cli.py all` 期望值、前端/API、运行时探测、guard、排错）见
+> [《solution 快速启动》](modules/solution-quickstart.md)。

@@ -3,6 +3,52 @@
 > 项目统一变更日志：**新条目只追加在这里**（最新在上，含日期、改动摘要、涉及模块）。
 > `release/v1.0-asset*/CHANGELOG.md` 是各版本快照内的冻结副本，与发布物一起留存，勿改。
 
+## solution 快速启动文档（2026-09-14）—— docs/modules/solution-quickstart.md
+
+### 变更
+- 新增 [modules/solution-quickstart.md](modules/solution-quickstart.md)：我方 demo（`solution/`）实操启动手册 ——
+  三条路径（A 静态全流程+前端 / B 运行时探测 / C guard 拦截代理）、`cli.py all` 六步期望值、
+  7 个 API 端点实测返回、工件清单、单测自查、8 条排错表、清理方式。
+- [index.md](index.md) 目录树与索引表同步；与既有 [modules/range-quickstart.md](modules/range-quickstart.md)
+  互为上下游（靶场侧 ↔ 我方侧）。
+
+### 实测（Windows 11 + Git Bash + Python 3.14.0；靶场 14 容器已 Up）
+- `pip install -r requirements.txt` → 8 个依赖；`python cli.py all` 全绿：对账 **24/24**、图 **57 节点/86 边**、
+  agent 评分 `opspilot-app=100(high)` / `opspilot_support=44(moderate)`、round-trip pass、
+  包络校验 **12/12**、变异差分 **10/10**、完整性 0 违规；墙钟 **约 5 秒**。
+- `python cli.py serve` → `:8080` 首页 200；`/api/summary` 14 服务/8 MCP/10 工具(1 隐藏)/7 技能/5 身份；
+  `/api/risks` total **35**（静态 16 + 包络 15 + 运行时 4 + 校验器 0）；`/api/artifacts` 200 · 28 KB。
+- `/api/judge` 三样本：`notes-sync.debug_exec` + 下载执行 = **140 block**；`tenant="*"` = 45 alert；
+  诱饵 `sandbox-exec.run_test` = **0 pass**（诱饵零误伤）。
+- 三探测器单跑：mcp_probe 广播 9 工具且 `debug_exec` 缺席；identity_probe 登录 5/5、伪造 ops-admin token 被接受、
+  错密钥阴性对照被拒；http_probe 组件存活 5/5、投毒页注入确认。
+- `pytest -q` → **16 passed**（约 1.5 秒）。
+
+### 记录到的坑（此前文档未写）
+- **`solution/out/` 在 `.gitignore` 内**：新检出无工件，此时 `cli.py serve` 首页仍 200 但**所有 `/api/*` 为 500**
+  （实测 `GET /api/summary` → 500）。必须先 `python cli.py all` 再 `serve`。
+- **`cli.py all` 的 runtime 步几乎总打印 `skipped`**：`cli.py` 只在三个探测器**全部返回 0** 时才跑 `observe`，
+  而 `http_probe` 的成功条件含 `"notes-sync" in by_src`；`notes-sync` 的启动外联只在容器启动那一刻发一次，
+  若它比 c2-sink 先就绪该收据即永久丢失（receipts 只剩 `src=beacon` / `src=cat2`），自检必然不过。
+  三份 `out/runtime/*.json` 照常写出，可用 `python -c "from runtime.observe import run; run()"` 单独补跑观测入图
+  （实测 17 节点、5 条运行时发现）；补发信标：`docker compose restart mcp-notes-sync`。
+- **测试依赖工件，且会把夹具数据写进真实工件目录**：`test_rug_pull_baseline` 只 monkeypatch 了
+  `mcp_probe.BASELINE`、没 monkeypatch `mcp_probe.OUT`，而 `check_baseline()` 会写 `OUT/baseline_changes.json`
+  —— 于是 ① 把 `out/` 移走后 `pytest -q` 为 `1 failed, 12 passed, 3 skipped`（`FileNotFoundError`，非代码问题）；
+  ② 跑过测试后 `baseline_changes.json` 里躺着夹具的 `srv:t1`（`old_head="evil desc"`），下一次 `observe`
+  会把它读成 `RT-tool-disappeared srv:t1` **假发现**（这就是运行时发现 4→5 的来源）。
+  清理：`rm out/runtime/baseline_changes.json && python -m runtime.mcp_probe`。
+  建议的一行修法（本次未改代码）：在该用例中补 `monkeypatch.setattr(probe_mod, "OUT", tmp_path)`，
+  可同时消除上面的 ① 与 ②。
+- **运行时风险数是环境相关的**（4–5 条，随靶场状态与探测历史浮动）；固定口径是静态 16 + 包络 15 + 校验器 0。
+- `README_集成.md` 的 `judge_events` 示例标注 `score:100` 为早期数值，当前单事件累加为 **140**，
+  已在 quickstart §2.4 以实测值为准（`README_集成.md` 本次未改）。
+
+### 涉及
+- docs/modules/solution-quickstart.md（新增）、docs/index.md、docs/changelog.md
+- 未改任何代码；`solution/out/`（gitignore）已按 pipeline 重新生成，并清掉测试夹具污染，
+  当前回到文档口径：运行时 4 条、`/api/risks` total 35
+
 ## 靶场快速启动文档（2026-09-14）—— docs/modules/range-quickstart.md
 
 ### 变更

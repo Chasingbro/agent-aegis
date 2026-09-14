@@ -13,6 +13,7 @@ docs/
 ├── modules/
 │   ├── range.md                        # 靶场 AgentRange 信息整理（10 章）
 │   ├── range-quickstart.md             # 靶场快速启动与回放实操（实测命令）
+│   ├── solution-quickstart.md          # 我方 demo 快速启动（静态全流程/前端/运行时/guard）
 │   └── agent-scanner.md                # 队友项目事实档案（闭集/规则/度量/实测/局限）
 ├── plans/                              # 计划文档（含状态标注）
 │   ├── 资产识别实施计划.md              # 第一阶段 P0-P5（已完成）
@@ -38,6 +39,7 @@ docs/
 | [architecture.md](architecture.md) | 状态型，2026-09-14 | solution 现状：11 采集通道 → 图谱 → BOM → 双推理引擎 → 服务端/前端，指标与已知边界 |
 | [modules/range.md](modules/range.md) | 状态型，2026-09-14 | 官方靶场逐文件分析：架构、组件、风险/漏洞清单、攻击剧本、语料机制、取证点（静态识别与运行时检测的"标准答案"） |
 | [modules/range-quickstart.md](modules/range-quickstart.md) | 操作型，2026-09-14 | 靶场快速启动：依赖、4 步启动、make 的原生命令替代、场景代号与回放、攻击落地取证、guard override、排错表 |
+| [modules/solution-quickstart.md](modules/solution-quickstart.md) | 操作型，2026-09-14 | 我方 demo 快速启动：三条路径（静态 5 秒全流程+前端 / 运行时探测 / guard 代理）、实测期望值、API 速查、工件清单、8 条排错表 |
 | [modules/agent-scanner.md](modules/agent-scanner.md) | 状态型，2026-09-14 | 队友项目 agent-scanner 事实档案：架构与数据流、13 类资产 / 9 类边 / 6 检测器、规则三层外置与 bench 度量机制、同靶实测数据、已知局限 |
 | [plans/资产识别实施计划.md](plans/资产识别实施计划.md) | 计划，已完成 | 能力 1 第一阶段：通道矩阵、ground truth、R1/R2/R3 规则、验收与时间线（实际落地差异见文首标注） |
 | [plans/资产识别优化计划清单.md](plans/资产识别优化计划清单.md) | 计划，进行中 | 六维度 28 项优化（采集/Schema/展示/证明/推理/约束）+ 5 个批次建议 + 依赖关系 + 不做清单 |
