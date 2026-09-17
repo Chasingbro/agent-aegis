@@ -4,6 +4,8 @@
 
 2026-09-15 尝试浅克隆 DVAA/Appsecco 时 GitHub 连接被重置，匿名 API 随后触发限流，因此本地 `sources/` 缓存未建立，清单状态标记为 `not-cached`，不能视为源码已收集。
 
+2026-09-17 补登记三个恶意数据集（《论文对照静态检测计划》P0）：SkillTrustBench 样本包已缓存并校验（CC BY-NC-SA 4.0，仅限非商业）；MalSkillBench 无许可证仅外部参考，且样本目录名含冒号在 Windows 上不可直接 checkout，本地为稀疏克隆缓存；MCPTox 匿名仓库有 Cloudflare 盾自动抓取受阻，taxonomy 以论文（AAAI 2026）为准。
+
 | 项目 | 类型 | 来源 | 许可证状态 | 推荐用途 |
 |---|---|---|---|---|
 | OpenA2A DVAA | direct-range | https://github.com/opena2a-org/damn-vulnerable-ai-agent | Apache-2.0 | 多 Agent、MCP、A2A、容器与场景资产 |
@@ -17,6 +19,9 @@
 | AgentDojo | benchmark/simulation | https://github.com/ethz-spylab/agentdojo | MIT | 行为任务与 prompt/tool injection 基线 |
 | 1Password SCAM | benchmark/simulation | https://github.com/1Password/SCAM | MIT | Skills 与模拟 MCP 工作场景 |
 | MCPSecBench | benchmark/simulation | https://github.com/AIS2Lab/MCPSecBench | MIT | MCP 命名仿冒、签名、MITM/DNS rebinding |
+| SkillTrustBench | dataset | https://huggingface.co/datasets/cuhk-zhuque/SkillTrustBench | CC BY-NC-SA 4.0（非商业） | 恶意 skill 扫描器外部回归：5,520 cases + ground_truth.json |
+| MalSkillBench | dataset | https://github.com/lxyeternal/MalSkillBench | 未发现 LICENSE（仅引用请求） | 108 格 taxonomy 对照；样本仅外部参考 |
+| MCPTox | dataset | https://anonymous.4open.science/r/AAAI26-7C02 | 未声明 | 投毒工具描述 taxonomy（以 AAAI 2026 论文为准） |
 
 ## 安全约束
 

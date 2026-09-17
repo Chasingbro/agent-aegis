@@ -1,6 +1,6 @@
 schema_version: 1
-verified_at: 2026-09-15
-source_cache: not_fetched_network_reset
+verified_at: 2026-09-17
+source_cache: partial-see-per-entry-cache-fields
 projects:
   - id: dvaa
     name: OpenA2A Damn Vulnerable AI Agent
@@ -90,3 +90,32 @@ projects:
     deployment: uv run
     assets: [mcp-client, mcp-server, typosquatting, signature, mitm, dns-rebinding]
     status: benchmark-only
+  - id: malskillbench
+    name: MalSkillBench
+    kind: dataset
+    url: https://github.com/lxyeternal/MalSkillBench
+    paper: https://arxiv.org/abs/2606.07131
+    license: none
+    deployment: blobless sparse clone cached; working-tree checkout impossible on Windows (sample dir names contain colon, ~999 entries); extract samples via name-mapping when needed
+    assets: [skill-package, taxonomy-108-cells, runtime-verification-pipeline, benign-fp-set]
+    cache: sparse-clone-no-checkout
+    status: taxonomy-reference-samples-external
+  - id: mcptox
+    name: MCPTox
+    kind: dataset
+    url: https://anonymous.4open.science/r/AAAI26-7C02
+    paper: https://arxiv.org/abs/2508.14925
+    license: none-stated
+    deployment: anonymous repo behind Cloudflare challenge; automated fetch blocked, manual browser download only
+    assets: [poisoned-tool-description, 3-attack-templates, 10-risk-categories, 45-live-mcp-servers]
+    cache: not-fetchable-cloudflare
+    status: taxonomy-reference
+  - id: skilltrustbench
+    name: SkillTrustBench (Tencent Zhuque Lab x CUHK-Shenzhen)
+    kind: dataset
+    url: https://huggingface.co/datasets/cuhk-zhuque/SkillTrustBench
+    license: CC-BY-NC-SA-4.0
+    deployment: benchmark_full_v1.0.zip (~77MB, 37,721 files, 5,520 cases) with ground_truth.json judgment/risk_labels/attack_pattern per case
+    assets: [skill-package, ground-truth-json, risk-taxonomy-t01-t09, dependency-layers-a-e]
+    cache: zip-verified
+    status: fixture-ready-noncommercial-only

@@ -2,6 +2,32 @@
 
 > 项目统一变更日志：**新条目只追加在这里**（最新在上，含日期、改动摘要、涉及模块）。
 
+## P0 数据获取与核实完成 + 积累进度推送 GitHub（2026-09-17）
+
+- **GitHub 同步**：2026-09-14~15 积累的全部进度（融合 P0–P2、规则分层与统一 bench P3、
+  留出环境 `test-ranges/agent-asset-lab`、oss-ranges 台账、本计划文档）以提交 `c12e7d7`
+  推送 `Chasingbro/agent-aegis` main 分支（81 文件，+4,561 行）。`.gitignore` 白名单模式
+  补齐 `/reference/*`、`/test-ranges/*` 收窄规则，修复 agent-scanner 与官方作品模板被
+  意外放行的问题（两者仍不入库）。提交前验证：solution 单测 49 passed / 3 skipped，
+  暂存清单无禁区路径、无真实凭证模式（留出环境敏感值均为 canary 假值）。
+- **《论文对照静态检测计划》P0 完成**（结论详见该文档 P0 节）：
+  - SkillTrustBench：Hugging Face `cuhk-zhuque/SkillTrustBench`（腾讯朱雀 × 港中深），
+    **CC BY-NC-SA 4.0**；样本包已缓存校验（5,520 cases + ground_truth.json，恶意 2,863 /
+    正常 1,643 / 可疑 1,014），**fixture-ready**。
+  - MalSkillBench：108 格 taxonomy 与样本数（3,944 恶意 + 4,000 良性）核实无误；
+    **无 LICENSE** 仅外部参考；样本目录名含冒号（~999 处）Windows 不可直接 checkout，
+    本地为 blobless 稀疏克隆缓存，取样需改名映射提取。
+  - MCPTox：正式发表确认（AAAI 2026）；匿名仓库有 Cloudflare 盾自动抓取受阻，
+    **降级为 taxonomy 参考**，样本如需转 fixture 走浏览器人工下载。
+- **ResearchGate 存疑条目已核实**：正式出处 arXiv:2602.06547（USENIX Security 2026）；
+  可用数字为 157 个行为验证恶意 skill、632 漏洞中 84.2% 藏于 SKILL.md；
+  旧摘录数字（~1,070 / 47.5%）正式版未出现，弃用。
+- oss-ranges 台账（`projects.yaml` + `README.md`）新增三个 dataset 条目及 2026-09-17 缓存状态；
+  `sources/` 缓存目录维持不入库。
+
+涉及模块：`docs/plans/论文对照静态检测计划.md`、`reference/oss-ranges/`、`docs/changelog.md`；
+本地缓存 `reference/oss-ranges/sources/`（不入库）。
+
 ## 计划文档修订：论文核实完成 + 精简为关键信息对照（2026-09-17）
 
 - `docs/plans/外部数据集反哺静态检测计划.md` §2 重写为核实后的关键信息对照表：
