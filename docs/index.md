@@ -43,7 +43,7 @@ docs/
 | [modules/range.md](modules/range.md) | 状态型，2026-09-14 | 官方靶场逐文件分析：架构、组件、风险/漏洞清单、攻击剧本、语料机制、取证点（静态识别与运行时检测的"标准答案"） |
 | [modules/range-quickstart.md](modules/range-quickstart.md) | 操作型，2026-09-14 | 靶场快速启动：依赖、4 步启动、make 的原生命令替代、场景代号与回放、攻击落地取证、guard override、排错表 |
 | [modules/solution-quickstart.md](modules/solution-quickstart.md) | 操作型，2026-09-15 | 我方 demo 快速启动：原生全流程、peer-scan、融合 dashboard API、运行时探测、guard、工件与排错 |
-| [modules/agent-scanner.md](modules/agent-scanner.md) | 状态型，2026-09-14 | 队友项目 agent-scanner 事实档案：架构与数据流、13 类资产 / 9 类边 / 6 检测器、规则三层外置与 bench 度量机制、同靶实测数据、已知局限 |
+| [modules/agent-scanner.md](modules/agent-scanner.md) | 状态型，2026-09-17 | 队友项目 agent-scanner 事实档案：顶层构成（赛事概况联合架构/filterC2 运行时实验）、四种目标输入与指纹匹配、13 类资产 / 9 类边、四份 bench 基线、同靶复跑实测（留出集风险 2/6）、已知局限与分工含义 |
 | [modules/oss-ranges.md](modules/oss-ranges.md) | 状态型，2026-09-15 | 开源 Agent/MCP 靶场台账、自有 agent-asset-lab 留出环境、目标 profile、oracle 与 bench |
 | [modules/taxonomy-comparison.md](modules/taxonomy-comparison.md) | 状态型，2026-09-17 | P1 产出：SkillTrustBench/MalSkillBench/MCPTox taxonomy × 我方 generic 规则逐维对照（37 维），P2 规则增强排序输入 |
 | [plans/资产识别实施计划.md](plans/资产识别实施计划.md) | 计划，已完成 | 能力 1 第一阶段：通道矩阵、ground truth、R1/R2/R3 规则、验收与时间线（实际落地差异见文首标注） |

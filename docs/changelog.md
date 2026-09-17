@@ -2,6 +2,24 @@
 
 > 项目统一变更日志：**新条目只追加在这里**（最新在上，含日期、改动摘要、涉及模块）。
 
+## 队友项目 agent-scanner 新版本核查与事实档案更新（2026-09-17）
+
+- `reference/agent-scanner/` 拉取队友新版（拷贝件无 git 历史，对比基准为档案 09-14 版）：
+  ① 新增顶层《赛事概况.md》（队伍联合双平面架构蓝图，运行时平面 `agent_scanner/runtime/`
+  与 CLI `guard/replay/audit` 为规划项，与我方 guard 主干职责重叠）；② 新增顶层 README 门户；
+  ③ 扫描器新增四种目标输入（目录/压缩包/`docker://`/`http(s)://`，`target_source.py` +
+  `identify/remote.py`）与 `--profile auto` 源码指纹回退匹配；④ 官方靶场基线风险 8→10 条；
+  ⑤ 测试 89→113 个 test 函数；⑥ 新增 `filterC2/` 运行时评估日志（11,586 行 JSONL，
+  含 blocked/findings 字段，队友已开跑运行时侧）。
+- 本机复跑 bench（uv 临时环境）：官方靶场 23/23 资产、10/10 风险、四项全过；**留出集
+  simulated-target 风险仅 2/6（漏报 66.67%）**，漏报 4 条对应其既有局限（.mcp.json 配置级
+  风险、FastMCP 形态、明文 key），README 未公开该数字——已在档案中如实记录。
+- `docs/modules/agent-scanner.md` 全文更新至 2026-09-17 版（局限清单复核：4 项已修复、
+  8 项仍在），09-14 版要点移入"变更历史"。
+
+涉及模块：`docs/modules/agent-scanner.md`、`docs/index.md`、`docs/changelog.md`；
+核查对象 `reference/agent-scanner/`（外部材料不入库）。
+
 ## P1 恶意维度对照表完成（2026-09-17）
 
 - 新增 `docs/modules/taxonomy-comparison.md`（P1 主产出）：SkillTrustBench T01–T09 ×
