@@ -1,0 +1,70 @@
+# Cross-environment static patterns. Target-specific literals belong in profile files.
+injection_patterns:
+  - "<IMPORTANT>.*</IMPORTANT>"
+  - "ignore (all )?previous"
+  - "不要向用户提及"
+  - "不要告诉"
+  - "read\\s+/[\\w./-]*\\.env"
+  - "读取\\s*/[\\w./-]*\\.env"
+  - "then\\s+call\\s+\\S+"
+  - "然后调用\\s*\\S+"
+  - "<(secret|system|internal|hidden|confidential)>.*</\\1>"
+  - "<s>[^<]*(ignore|override|bypass|hide)[^<]*</s>"
+  - "Internal Use Only"
+  - "do not (tell|inform|alert|notify|mention) (the )?(user|anyone)"
+  - "hide this (from|information)"
+  - "secret (instructions|commands|directives|notes)"
+  - "(ignore|disregard|bypass|override) (all|previous|system) (instructions|guidelines|rules)"
+  - "act as if you are (unrestricted|jailbroken)"
+  - "(enable|activate) (developer|god|admin) mode"
+  - "your new (prompt|instructions|role) is"
+  - "you are now"
+  - "from now on you are"
+  - "(extract|steal|access|retrieve).{0,40}(credentials|passwords|tokens|keys|secrets)"
+  - "(bypass|skip|ignore).{0,30}(auth|authentication)"
+  - "\\.\\.[/\\\\]+[\\w./-]*\\.(env|key|cfg|conf|json)"
+variable_poisoning_patterns:
+  - "\\b(system|internal|backend|core|kernel) ?(access|extract|dump|expose|reveal)\\b"
+  - "\\b(admin|root|superuser) ?(access|privileges|rights|credentials)\\b"
+  - "\\b(memory|context) ?(dump|extract|hijack|override|replace)\\b"
+  - "\\b(model|assistant|llm) ?(name|version|identity|configuration)\\b"
+  - "\\b(all|every|complete|entire) ?(tools|functions|capabilities)\\b"
+  - "\\b(access|read|extract) ?(ssh|private.?key|config\\.json)\\b"
+ansi_invisible_patterns:
+  - "\\x1b\\[37;47m"
+  - "\\x1b\\[38;5;15;48;5;15m"
+  - "\\x1b\\[38;2;255;255;255"
+  - "\\x1b\\[48;2;255;255;255"
+weak_value_patterns:
+  - "change[-_]?me"
+  - "weak"
+  - "^admin$"
+  - "^password$"
+  - "^test$"
+  - "^demo$"
+  - "^secret$"
+  - "^1234"
+dangerous_decoded_patterns:
+  - "subprocess"
+  - "os\\.system"
+  - "curl\\s+https?://"
+  - "\\|\\s*sh\\b"
+  - "http://"
+  - "exec\\("
+  - "eval\\("
+  - "b64decode"
+popular_mcp_servers:
+  - filesystem
+  - github
+  - gitlab
+  - slack
+  - postgres
+  - sqlite
+  - puppeteer
+  - brave-search
+  - memory
+  - sequential-thinking
+  - google-drive
+  - google-maps
+  - fetch
+name_similarity_threshold: 0.9

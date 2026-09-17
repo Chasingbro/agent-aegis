@@ -1,7 +1,114 @@
 # CHANGELOG
 
 > 项目统一变更日志：**新条目只追加在这里**（最新在上，含日期、改动摘要、涉及模块）。
+
+## 计划文档修订：论文核实完成 + 精简为关键信息对照（2026-09-17）
+
+- `docs/plans/外部数据集反哺静态检测计划.md` §2 重写为核实后的关键信息对照表：
+  MalSkillBench（v3，3,944 恶意 + 4,000 良性、108 格）、MCPTox（AAAI 2026，1,312 用例、
+  匿名仓库开源）、MCIP（v7）、MCPSecBench（v3，4 攻击面 17 类攻击）、STAC（v3，483 案例）、
+  DiagChain（v1，**定位纠偏**：是 LLM 攻击链重建能力评测而非攻击数据集）均对照 arXiv 原文核实。
+- 未核实项仅剩 ResearchGate 供应链投毒条目（数字暂不引用，P0 处理）。
+- 文档尾部章节按"只保留关键信息"要求精简（用户侧删除回归门禁/风险/分工/不做清单四节，
+  核实信息并入 §2 与 P0）。
+
+## 新增计划：外部数据集反哺静态检测（2026-09-17）
+
+- `docs/plans/外部数据集反哺静态检测计划.md`：基于公开恶意数据集调研（MalSkillBench / MCPTox /
+  SkillTrustBench 为主体，MCIP / MCPSecBench / ClawHub 事件为参考），制定
+  "taxonomy 维度对照 → generic 规则与采集器增强 → 样本转 fixture+oracle 挂 bench 外部回归
+  → 报告通用性论证"的 P0–P4 计划（约 1 周），含回归门禁、风险对策与队友分工建议。
+- 同步决策：砍掉此前讨论的"自生成攻击链数据框架"路线（轨迹 IR/模板引擎/LLM-judge 闭环），
+  以更低成本获取"通用算法"证据链；轨迹级数据集（STAC/R-Judge）留待能力 2 评估。
+- 涉及模块：仅文档（`docs/plans/`、`docs/index.md`）；待执行面为 `solution/rules/generic/`、
+  `solution/collectors/`、`solution/targets/bench.py`。
+
+## P3 规则分层与统一留出集 bench（2026-09-15）
+
+### 新增
+- `solution/rules/generic/` 与 `solution/rules/profile/agent-range.yaml`：通用规则和官方目标专用语义分离；扫描支持 `--generic-only`。
+- `solution/targets/bench.py`：统一适配两种 oracle 格式，输出 TP/FN/FP/extra、四项指标、负样本误报和 `not_measured`/`verdict` 状态。
+- `solution/cli.py`：`bench`/`fused-bench` 支持 `--oracle`、`--output` 和独立工件目录；`fused-bench` 写入 `fusion-bench.json`。
+- `solution/tests/test_generic_blacklist.py`、`test_fused_bench.py`：通用字面量黑名单、双目标目录隔离与退出码回归。
+
+### 验证口径
+- `simulated-target`（generic-only）：11/11 资产、6/6 风险、恶意类负样本误报 0。
+- `agent-asset-lab`（generic-only）：10/10 资产、5/5 风险、恶意类负样本误报 0。
+- solution 测试：46 passed、3 skipped；P3 专项回归 12 passed。
+
+## 开源靶场收集与留出环境（2026-09-15）—— 第二测试目标与 profile/oracle/bench
+
+### 新增
+- `reference/oss-ranges/README.md`、`projects.yaml`：记录 DVAA、Appsecco MCP Lab、MCP Breach-to-Fix、LLMVault、Dify、LibreChat、n8n、AgentDojo、SCAM、MCPSecBench 等候选项目的来源、许可证状态、部署方式、缓存状态和安全边界；GitHub 网络受限时不伪造源码已收集。
+- `test-ranges/agent-asset-lab/`：自有安全留出靶场，包含 Agent、模型桩、框架 fixture、PostgreSQL、6 个 MCP 风格服务、扩展文件、双网络和本地 canary sink；不修改官方 player，不执行真实外联或命令。
+- `solution/targets/profiles.yaml`、`oracle-agent-asset-lab.yaml`、`bench.py`：目标分类、独立真值和 `not_measured` 口径的目标级评测入口。
+
+### 变更
+- `solution/collect_static.py`：MCP 采集兼容独立 Compose build context、FastMCP/紧凑 Tool 注册、非官方扩展目录、通用 dotenv 示例和留出环境的结构性对账；官方靶场继续使用原精确对账。
+- `solution/cli.py`：新增 `bench --root <目录>` 入口。
+- `docs/modules/oss-ranges.md`、`docs/index.md`、`docs/architecture.md`：归档项目矩阵、留出环境边界和泛化评测方法。
+
+### 验证口径
+- 目标扫描器不读取 oracle；第三方无明确许可证项目只做外部参考，不进入发布物。
+- 留出环境所有敏感行为为本地 canary 标记；真实靶场与 `release/` 冻结快照未修改。
+
+涉及模块：`test-ranges/agent-asset-lab`、`solution/collect_static.py`、`solution/targets`、`solution/cli.py`、`docs/modules/oss-ranges.md`。
+
+### 后续修复
+- `solution/runtime/mcp_probe.py` 在写入 baseline 与变化工件前主动创建父目录；`test_peer_api.py` 在缺少生成工件时明确跳过，使清理 `solution/out` 后的干净测试仍可运行。
+
 > `release/v1.0-asset*/CHANGELOG.md` 是各版本快照内的冻结副本，与发布物一起留存，勿改。
+
+## 融合 P2（2026-09-15）—— Package 原生依赖图与 FastMCP AST 识别
+
+### 新增
+- `solution/collectors/packages.py`：解析 requirements/Dockerfile 的 Python 依赖，支持递归 `-r`、extras、specifier、direct URL 和多行 pip 指令；按 PEP 503 归一化并聚合来源。
+- `collect_static.py` 接入 `packages[]`；保留 runtime/dev/attack scope 与逐来源 `owner_entries`，避免攻击端/开发依赖污染 Agent BOM。
+- `graph/store.py`、节点/边 Schema、exporter 新增 `Package` 与 `depends_on`；原生图扩为 15 类节点、11 类边；BOM 在 `external_bom_refs.packages` 中增量记录可达 runtime 包，评分不变。
+- `McpModuleScan` 支持真实 FastMCP import/实例、`@mcp.tool()`/`@mcp.tool`、装饰器名称/描述、docstring、async handler、重复注册去重；识别 socket connect/sendall 与环境读取组合并输出 `malicious_mcp/data_exfiltration`。
+- validator 增加 `source_root` 跨 target 防护，避免 scan/graph 工件混用造成伪造漏报。
+
+### 验证
+- AgentRange：原生 **65 节点 / 118 边 / 8 Package / 32 depends_on**；对账 24/24；BOM 评分 100/44；包络 12/12；变异 10/10；validator 0。
+- simulated-target：5 个去重 Package；evil-mcp 识别 2 个 FastMCP 工具；`get_config` 外泄风险命中；非 FastMCP 装饰器负样本不误报。
+- solution 全量：**38 passed / 2 skipped**。
+
+### 边界
+- 依赖和 FastMCP 已进入 solution 原生静态链；generic/profile 规则分层、统一 fused-bench 与 `.mcp.json` 配置语义属于下一阶段。
+
+## 融合 P1（2026-09-15）—— canonical 图谱、严格读取与全链路脱敏
+
+### 新增
+- `solution/fusion/models.py`、`ids.py`、`normalize_solution.py`、`normalize_peer.py`、`merge.py`、`payload.py`：将 solution 与 agent-scanner 统一为 canonical 资产、边和风险；保留 source IDs、证据、provenance、declared/observed 与 BOM facets。
+- 实际 alias 覆盖 MCP server/tool、Skill 脚本和同名 compose 服务角色；peer 独有 package/credential/endpoint 保留为增量资产。
+- graph-only 节点以低置信度补齐；未解析边和风险进入 `quality`，不再静默丢弃。
+- `peer_io.py` 每次读取重验五件套，并以 current 指针中的 target 防止 summary 自证或篡改；区分 `not_run/not_configured/invalid/ready`；新增 `GET /api/dashboard`（`fusion-dashboard-v1`）。
+- `fusion/redact.py` 两遍跨工件脱敏：从敏感配置上下文收集秘密候选，再清理风险描述、证据和所有对外 payload；兼容 API、peer 状态与 ZIP 共用同一脱敏器。
+
+### 验证
+- 真实 AgentRange 融合：**88 canonical 节点 / 123 边 / 55 风险 / 120 aliases**；0 悬空边、0 未解析风险。
+- 已知 JWT 弱密钥、service token 和数据库连接凭据不出现在 `/api/dashboard|graph|bom|risks|baseline` 或 ZIP。
+- P1 定向 10 项；solution 全量 **30 passed / 2 skipped**。
+
+### 边界
+- 根页面仍为原 Cytoscape UI；队友 ECharts 主展示层尚未移植。
+- solution 原生 Package/FastMCP 已接入；`.mcp.json` 配置语义、generic/profile 规则和统一 bench 属 P3 以后。
+
+## 融合 P0（2026-09-14）—— 队友扫描器隔离执行与 last-good 工件
+
+### 新增
+- `solution/fusion/peer_runner.py`：以参数数组、`shell=False` 和固定 scanner root 启动 agent-scanner；支持 `AGENT_SCANNER_PYTHON`、`--generic-only`、超时和最小化子进程环境。
+- peer 工件采用不可变 `out/peer/jobs/<job-id>/` + 原子 `current.json` 指针 + `status.json`；超时、非零退出或坏工件不覆盖 last-good，`.scan.lock` 防同根并发写。
+- 五件套严格校验：assets/graph/risks/summary/bench 的 JSON 结构、资产和关系引用、target、tool version、bench 可度量/不可度量契约。
+- `solution/fusion/peer_io.py`：读取当前 last-good 与扫描状态；`solution/cli.py peer-scan` 显式触发扫描，dashboard HTTP 请求不触发长任务。
+- `GET /api/peer/status`：只读状态接口；`/api/artifacts` 排除未经脱敏的 peer 原始工件。
+
+### 验证
+- 单元/API 回归：runner 6 项 + peer API 2 项；solution 全量 **22 passed / 2 skipped**。
+- 真实 AgentRange：首次用系统 Python 因缺 PyYAML 返回 `scanner_failed`，没有创建/覆盖 current；配置 `AGENT_SCANNER_PYTHON=AgentRange-player/.venv/Scripts/python.exe` 后成功，agent-scanner 0.2.0 检出 **61 资产 / 55 边 / 20 风险**，约 **899 ms**。
+
+### 边界
+- P0 只负责可靠生产和读取 peer 工件；canonical ID/边/风险合并、前端融合、package/FastMCP 和统一 bench 属后续阶段。
 
 ## solution 快速启动文档（2026-09-14）—— docs/modules/solution-quickstart.md
 

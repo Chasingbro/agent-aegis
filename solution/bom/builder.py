@@ -72,6 +72,25 @@ def _weaknesses_for_agent(gs: GraphStore, agent_id: str, tool_entries: list[Tool
     return weak
 
 
+def _packages_for_agent(gs: GraphStore, agent_id: str, tool_entries: list[ToolEntry]) -> list[dict]:
+    owners = {agent_id}
+    for tool in tool_entries:
+        for server in gs.neighbors_in(tool.ref, "exposes"):
+            if gs.g.nodes[server]["type"] == "MCPServer":
+                owners.add(server)
+    packages = {}
+    for owner in owners:
+        for pid in gs.neighbors_out(owner, "depends_on"):
+            node = gs.g.nodes[pid]
+            if node["type"] != "Package":
+                continue
+            packages[pid] = {"ref": pid, "name": node["name"],
+                             "version_specs": node["declared"].get("version_specs", []),
+                             "scopes": node["declared"].get("scopes", []),
+                             "evidence": "; ".join(node["provenance"])}
+    return [packages[pid] for pid in sorted(packages)]
+
+
 def build_agent_bom(gs: GraphStore, agent_id: str) -> AgentBOM:
     d = gs.g.nodes[agent_id]
     decl = d["declared"]
@@ -150,7 +169,8 @@ def build_agent_bom(gs: GraphStore, agent_id: str) -> AgentBOM:
         inter_agent=inter_agent,
         external_bom_refs={"sbom": None,
                            "component_versions": {"langflow": "1.8.4"},
-                           "advisories_hit": ["CVE-2026-0770", "CVE-2026-5027"]},
+                           "advisories_hit": ["CVE-2026-0770", "CVE-2026-5027"],
+                           "packages": _packages_for_agent(gs, agent_id, tool_entries)},
         governance_weaknesses=weaknesses,
     )
 

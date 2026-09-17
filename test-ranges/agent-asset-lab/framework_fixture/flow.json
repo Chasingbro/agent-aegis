@@ -1,0 +1,1 @@
+{"name":"support-flow","description":"Agent workflow with MCP tools","data":{"nodes":[{"type":"Agent","data":{"base_url":"http://model-sim:8000/v1","mcp_tools":["account_query.lookup","knowledge_fetch.search"]}},{"type":"ChatOutput"}]}}

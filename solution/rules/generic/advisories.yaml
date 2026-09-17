@@ -1,0 +1,12 @@
+advisories:
+  langflow:
+    - id: CVE-2026-0770
+      cwe: CWE-94
+      type: 代码注入
+      summary: validate/code 默认参数表达式求值导致任意命令执行
+      versions: ["1.8.4"]
+    - id: CVE-2026-5027
+      cwe: CWE-434
+      type: 上传/路径穿越
+      summary: filename 路径穿越写 /etc/cron.d 触发定时 RCE
+      versions: ["1.8.4"]

@@ -1,0 +1,95 @@
+services:
+  asset-agent:
+    build: ./agent_api
+    environment:
+      MODEL_ENDPOINT: http://model-sim:8000/v1/chat/completions
+      ACCOUNT_ENDPOINT: http://account-query:8000/mcp
+      JWT_SECRET: demo-weak-secret
+      SERVICE_TOKEN: svc-demo-all-access
+      PROPAGATION_MODE: service-account
+    depends_on:
+      - model-sim
+      - account-query
+    networks: [core-net]
+    ports: ["8200:8000"]
+
+  model-sim:
+    build: ./model_stub
+    networks: [core-net]
+    ports: ["8201:8000"]
+
+  flow-engine:
+    build: ./framework_fixture
+    environment:
+      AUTO_LOGIN: "true"
+      FLOW_MODEL_URL: http://model-sim:8000/v1/chat/completions
+    depends_on: [model-sim]
+    networks: [core-net]
+    ports: ["7861:7860"]
+
+  account-query:
+    build: ./mcp_services/account_query
+    environment:
+      DATABASE_URL: postgresql://labuser:labuser@asset-db:5432/assets
+      TENANT_MODE: "*"
+    depends_on: [asset-db]
+    networks: [core-net]
+
+  knowledge-fetch:
+    build: ./mcp_services/knowledge_fetch
+    environment:
+      REMOTE_SOURCE: http://internet-stub:9001/advisory/demo
+    depends_on: [internet-stub]
+    networks: [core-net, edge-net]
+
+  threat-lookup:
+    build: ./mcp_services/threat_lookup
+    environment:
+      REMOTE_SOURCE: http://internet-stub:9001/advisory/clean
+    depends_on: [internet-stub]
+    networks: [core-net, edge-net]
+
+  ops-check:
+    build: ./mcp_services/ops_check
+    networks: [core-net]
+
+  note-archive:
+    build: ./mcp_services/note_archive
+    environment:
+      CANARY_SINK: http://canary-sink:9101/collect
+    depends_on: [canary-sink]
+    networks: [core-net, edge-net]
+
+  qa-runner:
+    build: ./mcp_services/qa_runner
+    networks: [core-net]
+
+  asset-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: assets
+      POSTGRES_USER: labuser
+      POSTGRES_PASSWORD: labuser
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./backends/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    networks: [core-net]
+
+  internet-stub:
+    build: ./edge/internet_stub
+    networks: [edge-net]
+    ports: ["9200:9001"]
+
+  canary-sink:
+    build: ./edge/canary_sink
+    networks: [edge-net]
+    ports: ["9201:9101"]
+
+volumes:
+  db-data:
+
+networks:
+  core-net:
+    driver: bridge
+  edge-net:
+    driver: bridge

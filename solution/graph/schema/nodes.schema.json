@@ -10,7 +10,7 @@
         "AgentApplication", "AgentFlow", "FrameworkComponent",
         "ModelEndpoint", "MCPServer", "Tool", "Skill", "SkillScript",
         "Identity", "DataStore", "NetworkSegment", "ExternalEndpoint",
-        "WebPage", "ConfigItem"
+        "WebPage", "ConfigItem", "Package"
       ]
     },
     "name": {"type": "string", "minLength": 1},

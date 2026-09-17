@@ -1,0 +1,92 @@
+schema_version: 1
+verified_at: 2026-09-15
+source_cache: not_fetched_network_reset
+projects:
+  - id: dvaa
+    name: OpenA2A Damn Vulnerable AI Agent
+    kind: direct-range
+    url: https://github.com/opena2a-org/damn-vulnerable-ai-agent
+    license: Apache-2.0
+    deployment: docker compose up
+    assets: [agent, agent-card, mcp, a2a, tool, skill, container, scenario]
+    status: verified-metadata-not-cached
+  - id: appsecco-mcp
+    name: Appsecco Vulnerable MCP Servers Lab
+    kind: direct-range
+    url: https://github.com/appsecco/vulnerable-mcp-servers-lab
+    license: MIT
+    deployment: per-directory Node.js/Python launch
+    assets: [mcp, tool, dependency, secret, client-config, fixture]
+    status: verified-metadata-not-cached
+  - id: breach-to-fix
+    name: MCP Breach-to-Fix Labs
+    kind: direct-range
+    url: https://github.com/PawelKozy/mcp-breach-to-fix-labs
+    license: unverified
+    deployment: docker compose up <lab-service>
+    assets: [mcp, fastmcp, vulnerable-secure-pair, fixture, tenant-data, dockerfile]
+    status: reference-only-license-review
+  - id: llmvault
+    name: LLMVault
+    kind: direct-range
+    url: https://github.com/CyberSunil/LLMVault
+    license: MIT
+    deployment: docker compose up --build
+    assets: [agent, rag, tool, dependency, dataset, config, container]
+    status: verified-metadata-not-cached
+  - id: vulnerable-llm-agent
+    name: Damn Vulnerable LLM Agent
+    kind: direct-range
+    url: https://github.com/ReversecLabs/damn-vulnerable-llm-agent
+    license: Apache-2.0
+    deployment: docker run -p 8501:8501
+    assets: [agent, langchain, tool, sql, llm-config, container]
+    status: verified-metadata-not-cached
+  - id: dify
+    name: Dify
+    kind: platform-target
+    url: https://github.com/langgenius/dify
+    license: Dify Open Source License
+    deployment: official Docker Compose
+    assets: [api, worker, plugin, sandbox, postgres, redis, vector-store, model, mcp]
+    status: profile-only-license-review
+  - id: librechat
+    name: LibreChat
+    kind: platform-target
+    url: https://github.com/danny-avila/LibreChat
+    license: MIT
+    deployment: official Docker Compose
+    assets: [node-api, web, mongodb, rag, action, agent, mcp, auth]
+    status: profile-only
+  - id: n8n
+    name: n8n
+    kind: platform-target
+    url: https://github.com/n8n-io/n8n
+    license: Sustainable Use License / Enterprise License
+    deployment: official Docker self-hosting
+    assets: [workflow, worker, credential, community-node, ai-agent, vector-store, mcp]
+    status: profile-only-license-review
+  - id: agentdojo
+    name: AgentDojo
+    kind: benchmark/simulation
+    url: https://github.com/ethz-spylab/agentdojo
+    license: MIT
+    deployment: pip install agentdojo
+    assets: [task, simulated-tool, attack, defense]
+    status: benchmark-only
+  - id: scam
+    name: 1Password SCAM
+    kind: benchmark/simulation
+    url: https://github.com/1Password/SCAM
+    license: MIT
+    deployment: pip install -e '.[dev]'
+    assets: [skill, simulated-mcp, scenario, synthetic-data]
+    status: benchmark-only
+  - id: mcpsecbench
+    name: AIS2Lab MCPSecBench
+    kind: benchmark/simulation
+    url: https://github.com/AIS2Lab/MCPSecBench
+    license: MIT
+    deployment: uv run
+    assets: [mcp-client, mcp-server, typosquatting, signature, mitm, dns-rebinding]
+    status: benchmark-only

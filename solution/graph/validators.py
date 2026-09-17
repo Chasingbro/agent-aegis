@@ -131,7 +131,14 @@ def validate_dual_source(gs: GraphStore, scan: dict) -> list[dict]:
 def run_validators(gs: GraphStore, scan: dict | None = None) -> dict:
     findings = validate_schema(gs) + validate_references(gs)
     if scan:
-        findings += validate_dual_source(gs, scan)
+        graph_root = gs.g.graph.get("source_root")
+        scan_root = scan.get("root")
+        if graph_root and scan_root and Path(graph_root).resolve() != Path(scan_root).resolve():
+            findings.append(_f(
+                "SRC-target-mismatch", str(scan_root), f"graph={graph_root}; scan={scan_root}",
+                "图谱与 scan 工件来自不同目标，拒绝执行双源对账", "CWE-1163", "medium"))
+        else:
+            findings += validate_dual_source(gs, scan)
     by_rule: dict[str, int] = {}
     for f in findings:
         by_rule[f["rule"]] = by_rule.get(f["rule"], 0) + 1

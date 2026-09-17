@@ -1,0 +1,45 @@
+version: 1
+targets:
+  agent-range:
+    kind: primary-range
+    root_env: AGENT_RANGE_ROOT
+    compose: docker-compose.yml
+    runtime:
+      health:
+        - http://localhost:8100/health
+      mcp_network: opspilot-net
+  agent-asset-lab:
+    kind: holdout-range
+    root: test-ranges/agent-asset-lab
+    compose: docker-compose.yml
+    runtime:
+      health:
+        - http://localhost:8200/health
+        - http://localhost:9201/health
+      mcp_services:
+        - account-query
+        - knowledge-fetch
+        - threat-lookup
+        - ops-check
+        - note-archive
+        - qa-runner
+  dvaa:
+    kind: external-range
+    source: https://github.com/opena2a-org/damn-vulnerable-ai-agent
+    license: Apache-2.0
+    deployment: docker compose up
+  appsecco-mcp:
+    kind: external-range
+    source: https://github.com/appsecco/vulnerable-mcp-servers-lab
+    license: MIT
+    deployment: per-directory Node.js/Python launch
+  mcp-breach-to-fix:
+    kind: external-range
+    source: https://github.com/PawelKozy/mcp-breach-to-fix-labs
+    license: unverified
+    deployment: docker compose up <lab-service>
+  llmvault:
+    kind: external-range
+    source: https://github.com/CyberSunil/LLMVault
+    license: MIT
+    deployment: docker compose up --build

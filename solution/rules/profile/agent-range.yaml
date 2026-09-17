@@ -1,0 +1,16 @@
+# Official AgentRange-specific values and aliases. Generic detection stays in ../generic.
+profile_id: agent-range
+aliases:
+  - agent-range
+  - agentrange-player
+  - 揭榜挑战赛赛题2靶场-agentrange-player
+weak_value_patterns:
+  - "sk-stub"
+  - "all-access"
+agent_literals:
+  - opspilot-app
+  - llm-stub
+  - mcp_base
+  - notes-sync
+  - c2-sink
+  - mock-internet

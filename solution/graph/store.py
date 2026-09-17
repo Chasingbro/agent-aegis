@@ -1,10 +1,10 @@
 """属性图存储：scan.json -> NetworkX 图（声明面），作为 BOM/规则/前端的单一数据源。
 
-节点: 13 类闭集（AgentApplication/AgentFlow/FrameworkComponent/ModelEndpoint/
+节点: 15 类闭集（AgentApplication/AgentFlow/FrameworkComponent/ModelEndpoint/
       MCPServer/Tool/Skill/SkillScript/Identity/DataStore/NetworkSegment/
-      ExternalEndpoint/WebPage/ConfigItem）
+      ExternalEndpoint/WebPage/ConfigItem/Package）
 边:   exposes/mounts/declares_allowed/has_script/attached_to/uses/authenticates/
-      egress_to/serves/configures
+      egress_to/serves/configures/depends_on
 每个节点带 declared/observed 双 facet 与 provenance。
 """
 
@@ -122,6 +122,7 @@ class GraphStore:
 
 def build_graph(scan: dict) -> GraphStore:
     gs = GraphStore()
+    gs.g.graph["source_root"] = scan.get("root")
     compose = scan["compose"]
 
     # 网络与服务
@@ -177,6 +178,26 @@ def build_graph(scan: dict) -> GraphStore:
                     gs.add_node(ext, "ExternalEndpoint", host,
                                 declared={"url": url}, provenance=["env:" + key])
                 gs.add_edge(sid, ext, "egress_to", url=url)
+
+    # Python 依赖包：全部盘点；仅有确定 Compose owner 的 runtime 依赖建立 depends_on。
+    for package in scan.get("packages", []):
+        pid = f"package:{package['name']}"
+        sources = [f"{entry['file']}:{entry['line']}" for entry in package.get("sources", [])]
+        gs.add_node(pid, "Package", package["name"],
+                    declared={"version_specs": package.get("version_specs", []),
+                              "scopes": package.get("scopes", []),
+                              "owners": package.get("owners", []),
+                              "owner_entries": package.get("owner_entries", []),
+                              "entries": package.get("sources", [])},
+                    provenance=sources)
+        runtime_owners = {entry["owner"] for entry in package.get("owner_entries", [])
+                          if entry.get("scope") == "runtime"}
+        for owner in runtime_owners:
+            owner_id = svc_node.get(owner) or (
+                f"mcp:{owner.removeprefix('mcp-')}" if owner.startswith("mcp-") else None)
+            if owner_id and owner_id in gs.g:
+                gs.add_edge(owner_id, pid, "depends_on",
+                            purpose="python-runtime-dependency")
 
     # Agent 应用：路由挂载 / 技能 / 模型 / 身份
     app = scan["app"]

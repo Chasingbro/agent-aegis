@@ -12,6 +12,7 @@ TYPE_COLORS = {
     "Identity": "#eab308", "DataStore": "#92400e",
     "NetworkSegment": "#6b7280", "ExternalEndpoint": "#ef4444",
     "WebPage": "#64748b", "ConfigItem": "#ec4899",
+    "Package": "#5ad7e0",
 }
 
 TYPE_NAMES_ZH = {
@@ -22,6 +23,7 @@ TYPE_NAMES_ZH = {
     "Identity": "身份", "DataStore": "数据存储",
     "NetworkSegment": "网络分区", "ExternalEndpoint": "外部端点",
     "WebPage": "网页内容", "ConfigItem": "配置项",
+    "Package": "依赖包",
 }
 
 

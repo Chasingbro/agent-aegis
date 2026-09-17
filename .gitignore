@@ -6,6 +6,13 @@
 !/README.md
 !/solution/
 !/docs/
+!/test-ranges/
+/test-ranges/*
+!/test-ranges/agent-asset-lab/
+!/reference/
+/reference/*
+!/reference/oss-ranges/
+/reference/oss-ranges/sources/
 
 # ===== solution 内生成物与缓存 =====
 __pycache__/

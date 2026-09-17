@@ -1,0 +1,65 @@
+target: agent-asset-lab
+assets:
+  - id: service.asset-agent
+    kind: service
+    expected: true
+    source: docker-compose.yml
+  - id: agent.asset-lab-agent
+    kind: agent
+    expected: true
+    source: agent_api/app.py
+  - id: model.sim-model-v1
+    kind: model
+    expected: true
+    source: model_stub/app.py
+  - id: framework.flow-engine
+    kind: framework
+    expected: true
+    source: framework_fixture/app.py
+  - id: datastore.asset-db
+    kind: datastore
+    expected: true
+    source: docker-compose.yml
+  - id: mcp.account-query.lookup
+    kind: tool
+    expected: true
+    source: mcp_services/account_query/server.py
+  - id: mcp.note-archive.maintenance
+    kind: tool
+    expected: true
+    source: mcp_services/note_archive/server.py
+  - id: skill.meeting-digest
+    kind: skill
+    expected: true
+    source: extensions/skills/meeting-digest.md
+  - id: plugin.export-plugin
+    kind: plugin
+    expected: true
+    source: extensions/plugins/export_plugin.py
+  - id: network.local-canary
+    kind: network-control
+    expected: true
+    source: docker-compose.yml
+risks:
+  - id: config.weak-secret
+    expected: true
+    evidence: backends/demo.env.example
+  - id: config.wildcard-tenant
+    expected: true
+    evidence: docker-compose.yml
+  - id: mcp.hidden-tool
+    expected: true
+    evidence: mcp_services/note_archive/server.py
+  - id: mcp.description-poisoning
+    expected: true
+    evidence: mcp_services/note_archive/server.py
+  - id: skill.hidden-comment-injection
+    expected: true
+    evidence: extensions/skills/meeting-digest.md
+benign:
+  - id: tool.qa-runner.run_test
+    expected: true
+    expected_risk: false
+  - id: mcp.threat-lookup.lookup
+    expected: true
+    expected_risk: false

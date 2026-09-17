@@ -1,12 +1,12 @@
 ---
 type: module
 covers: "solution/*.py"
-last_updated: 2026-09-14
+last_updated: 2026-09-15
 ---
 
 # solution 快速启动（资产识别 demo）
 
-> 2026-09-14 实测于 Windows 11 + Git Bash + Python 3.14.0（靶场为 Docker Desktop 上已启动的 14 容器）。
+> 2026-09-15 复审于 Windows 11 + Git Bash + Python 3.14.0；已补充 `peer-scan`、`/api/dashboard` 和脱敏导出。靶场 Docker 运行要求仍只适用于路径 B/C。
 > 本文只讲**怎么把我们的 demo 跑起来、跑到什么算成功**；系统分层与各组件职责见
 > [../architecture.md](../architecture.md)，给队友的三层融合接口见 `solution/README_集成.md`，
 > 赛题指标见 [../challenge.md](../challenge.md)。
@@ -17,7 +17,7 @@ last_updated: 2026-09-14
 
 | 路径 | 一句话 | 需要靶场在跑？ | 耗时 |
 |---|---|---|---|
-| **A 静态识别 + 前端** | 扫描靶场源码 → 图谱/BOM/风险 → 网页三视图 | ❌ 不需要 Docker | 首次装依赖约 1 分钟；之后每次全流程 **约 5 秒** |
+| **A 静态识别 + 融合前端** | solution 全流程 + peer-scan → canonical 图谱/BOM/风险 | ❌ 不需要 Docker | 原生约 5 秒；peer 实测约 0.9 秒 |
 | **B 运行时探测** | 打靶场接口取实证，升级风险证据等级 | ✅ 需要 14 个容器 Up | 约 5 秒 |
 | **C guard 拦截代理** | MCP 链路串拦截代理，回放攻击看阻断 | ✅ 需要靶场 + 重建容器 | 单场景秒级；全量评测约 4.5 分钟/相 |
 
@@ -36,30 +36,41 @@ pip install -r requirements.txt
 依赖只有 8 个：`pyyaml / pyjwt / jsonschema / networkx / fastapi / uvicorn / httpx / pytest`
 （不需要靶场的 `requirements-dev.txt`，也不需要 `psycopg2-binary` —— 那是靶场 seed 用的）。
 
+P2 原生采集还会从目标的 `requirements*.txt` 与 Dockerfile 盘点 Python Package，并解析 FastMCP 的 `FastMCP(...)` 与 `@mcp.tool()`；P3 增加 generic/profile 规则分层，`--generic-only` 可关闭目标专用规则。目标源码只做 AST/文本读取，不执行目标代码。目标级评测使用独立输出目录：`python cli.py fused-bench --root <目录> --oracle <oracle.yaml> --output <目录> --generic-only`；oracle 缺失或不可解析时返回 `not_measured`。
+
+运行时 MCP 基线写入前会自动创建 `solution/out/runtime/`；API 工件测试在 clean checkout 缺少 `out/` 时明确跳过，因此清理 `out/` 后可直接运行单测，不需要手工建目录。
+
 靶场根目录由 `range_root.py` 统一解析，按 `AgentRange-player` → 旧长名回退，也可用环境变量
 `AGENT_RANGE_ROOT` 覆盖；**路径不用写死在命令里**。
 
 ---
 
-## 2. 路径 A：静态全流程 + 前端（4 步）
+## 2. 路径 A：静态全流程 + 融合接口（5 步）
 
 ```bash
 cd solution
 
-# 1) 全流程：scan → graph → bom → import → runtime → verify（工件落 out/）
+# 1) 原生全流程：scan → graph → bom → import → runtime → verify（工件落 out/）
 python cli.py all
+# 官方靶场 P2 期望：65 节点 / 118 边 / 8 Package / 32 depends_on；BOM 评分 100/44
+# 留出集只做结构扫描：python cli.py scan --root ../reference/agent-scanner/simulated-target
 
-# 2) 启动前端 + API（127.0.0.1:8080）
+# 2) 显式运行队友 scanner（HTTP 请求不会自动触发）
+# 若当前 Python 缺 PyYAML，先指定具备该依赖的解释器：
+export AGENT_SCANNER_PYTHON="$PWD/../AgentRange-player/.venv/Scripts/python.exe"
+python cli.py peer-scan --root ../AgentRange-player --timeout 300
+
+# 3) 启动前端 + API（127.0.0.1:8080）
 python cli.py serve
 ```
 
-打开 <http://127.0.0.1:8080/> ，三个视图页签：**资产图谱 / 权限包络(BOM) / 风险与控制**。
+打开 <http://127.0.0.1:8080/> 仍为原 Cytoscape 三视图；融合数据通过 `GET /api/dashboard` 提供，后续队友 ECharts 主界面直接消费该接口。
 
 ### 2.1 `cli.py all` 的期望输出（实测）
 
 ```
 === scan ===    对账结果: 24/24 通过
-=== graph ===   57 节点 / 86 边
+=== graph ===   65 节点 / 118 边（含 8 Package、32 depends_on）
 === bom ===     agent:opspilot-app=100(high); flow:opspilot_support=44(moderate)
 === import ===  import {'agents': 0, 'tools_matched': 12, 'tools_created': 0, 'attrs_set': 14}; round-trip pass
 === runtime === skipped（...）        ← 靶场不可达或自检未通过时优雅跳过，见 §4
@@ -82,17 +93,21 @@ python cli.py verify
 python cli.py all --root <其它项目目录>    # 扫别的项目根（--root 只作用于 scan）
 ```
 
+`peer/current.json` 中的 target 会在每次读取时与 `summary.json` 交叉校验；current 工件损坏或被篡改时 `/api/dashboard` 会报告 `peer_load=invalid`，不会把它当成一次合法空扫描。所有对外 JSON（包括 `/api/judge`）和 ZIP 均使用同一跨工件脱敏器。
+
 ### 2.4 API 速查（实测返回）
 
 | 端点 | 用途 | 实测结果 |
 |---|---|---|
-| `GET /api/summary` | 资产计数 + agent 评分 | 14 服务 / 8 MCP / 10 工具（1 隐藏）/ 7 技能 / 5 身份 / 57 节点 / 88 边；`opspilot-app`=100(high,A3,T5)、`opspilot_support`=44(moderate,A2,T1) |
+| `GET /api/summary` | 资产计数 + agent 评分 | 14 服务 / 8 MCP / 10 工具（1 隐藏）/ 7 技能 / 5 身份 / 65 节点 / 120 边（enriched）；`opspilot-app`=100(high,A3,T5)、`opspilot_support`=44(moderate,A2,T1) |
 | `GET /api/graph` | 前端图谱数据 | 节点含 declared/observed 双面 |
 | `GET /api/bom` | AgentRiskBOM 原文 | 2 agents，工具 T1–T5 分级 |
-| `GET /api/risks` | 风险发现（四来源） | **total 35** = 静态 16 + 包络 15 + 运行时 4 + 校验器 0 |
+| `GET /api/risks` | 风险发现（四来源） | **total 35** = 静态 16 + 包络 15 + 运行时 4 + 校验器 0；融合总览另含 peer 发现 |
 | `GET /api/baseline` | 声明包络（判定基线，融合接口） | agents 2 / tools 12 / 隐藏工具 1（`tool:notes-sync.debug_exec`）/ 身份 scope 5 / 通配符工具 1 / 敏感路径 4 / 危险命令模式 5 |
 | `POST /api/judge` | 事件级判定（与 guard 同引擎） | 见下 |
-| `GET /api/artifacts` | 全工件 zip 下载 | 200，约 28 KB |
+| `GET /api/dashboard` | solution + agent-scanner 统一融合 payload | `fusion-dashboard-v1`；当前实测 86 节点 / 155 边 / 51 风险 / 118 aliases，引用不变式全绿；peer 工件异常时附 `peer_load=invalid` |
+| `GET /api/peer/status` | 队友扫描任务只读状态 | `ready` + agent-scanner 0.2.0；不会从 HTTP 触发扫描 |
+| `GET /api/artifacts` | 脱敏后的 solution JSON 工件 zip | raw peer 工件不进入 ZIP；已知 JWT/service token/数据库凭据不外发 |
 
 判定的三条"手感样本"（`POST /api/judge`，实测）：
 
@@ -118,13 +133,15 @@ curl -s -X POST http://127.0.0.1:8080/api/judge -H 'Content-Type: application/js
 
 | 工件 | 内容 |
 |---|---|
-| `scan.json` | 采集层原始结构（服务/工具/技能/身份/路由）+ `risks[]` 静态发现（16 条，R1/R2/R3） |
-| `graph.json` | 属性图快照：14 类节点闭集，`declared/observed` 双面 + provenance |
+| `scan.json` | 采集层原始结构（服务/工具/技能/身份/路由）+ `packages[]` 依赖资产 + `risks[]` 静态发现 |
+| `graph.json` | 属性图快照：15 类节点闭集（含 Package）、`depends_on` 边、`declared/observed` 双面 + provenance |
 | `bom.json` | AgentRiskBOM：T1–T5 分级、自主等级 A1–A4、凭据 scope、评分与控制映射 |
 | `graph.enriched.json` | BOM 回灌后的图（节点带 `bom_*`） |
 | `validator_findings.json` | 完整性校验（schema/引用/双源） |
 | `baseline.json` | `policy_baseline()` 导出物，**guard 容器挂载它做判定基线**（见 §5） |
 | `runtime/*.json` | 三条运行时探测的原始产物 + 差分/发现（见 §4） |
+| `peer/jobs/<job-id>/` | 队友 scanner 的不可变原始任务工件（只在本地，API/ZIP 不直接外发） |
+| `peer/current.json` / `peer/status.json` | last-good 指针与最近扫描状态 |
 | `eval/` | guard 全量评测数据与报告（`guard/evaluate.py` 的产物） |
 
 全部工件带 `_meta{version, generated_at}`；`out/` 整体不入库，可随时删掉重跑。

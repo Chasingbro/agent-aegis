@@ -112,6 +112,8 @@ def check_baseline(results: dict) -> list[dict]:
         if key not in new:
             changes.append({"key": key, "kind": "tool_disappeared",
                             "old_head": old[key]["description"][:80]})
+    BASELINE.parent.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     BASELINE.write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")
     (OUT / "baseline_changes.json").write_text(
         json.dumps(changes, ensure_ascii=False, indent=1), encoding="utf-8")

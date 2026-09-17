@@ -204,6 +204,10 @@ def test_validator_catches_dangling_references():
 def test_validator_schema_closed_set():
     from graph.validators import validate_schema
     gs = _synth_graph()
+    gs.add_node("package:fastapi", "Package", "fastapi",
+                declared={"version_specs": ["==0.111.0"]})
+    gs.add_edge("mcp:good", "package:fastapi", "depends_on")
+    assert validate_schema(gs) == []
     gs.add_node("x:bad", "Other", "bad")  # 闭集外类型
     findings = validate_schema(gs)
     assert any(f["rule"] == "SCH-node-schema" and f["target"] == "x:bad"
@@ -219,12 +223,24 @@ def test_validator_dual_source_diff():
                for f in findings)
 
 
+def test_validator_rejects_cross_target_artifacts():
+    from graph.validators import run_validators
+    gs = _synth_graph()
+    gs.g.graph["source_root"] = "C:/workspace/official"
+    scan = {"root": "C:/workspace/other", "compose": {"services": []}}
+    result = run_validators(gs, scan)
+    assert result["by_rule"]["SRC-target-mismatch"] == 1
+
+
 @pytest.mark.skipif(not (OUT / "graph.json").exists(), reason="缺少 out/graph.json")
 def test_validator_regression_clean():
     from graph.store import GraphStore
     from graph.validators import run_validators
     gs = GraphStore.load(OUT / "graph.json")
     scan = json.loads((OUT / "scan.json").read_text(encoding="utf-8"))
+    graph_root = gs.g.graph.get("source_root")
+    if graph_root and scan.get("root") and Path(graph_root).resolve() != Path(scan["root"]).resolve():
+        pytest.skip("out 工件来自不同 target；避免跨目标旧工件污染回归")
     result = run_validators(gs, scan)
     assert result["total"] == 0, result["findings"]
 

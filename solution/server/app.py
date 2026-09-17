@@ -8,6 +8,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
+from fusion.payload import build_dashboard_payload
+from fusion.peer_io import load_peer_payload
+from fusion.redact import redact_document
 from graph.export import export_for_frontend
 from graph.rules import run_envelope_rules
 from graph.store import GraphStore
@@ -27,6 +30,22 @@ def _graph():
     return GraphStore.load(enriched if enriched.exists() else OUT / "graph.json")
 
 
+def _redaction_context() -> list[dict]:
+    documents = []
+    for relative in ("scan.json", "graph.enriched.json", "graph.json", "bom.json",
+                     "runtime/runtime_findings.json", "validator_findings.json"):
+        path = OUT / relative
+        if not path.is_file():
+            continue
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(value, dict):
+            documents.append(value)
+    return documents
+
+
 @app.get("/")
 def index():
     return FileResponse(WEB / "index.html")
@@ -42,14 +61,24 @@ def cytoscape_js():
     return FileResponse(WEB / "vendor" / "cytoscape.min.js")
 
 
+@app.get("/api/dashboard")
+def api_dashboard():
+    """统一、脱敏的 solution + agent-scanner dashboard payload。"""
+    import api
+    artifacts = api.load_artifacts()
+    artifacts["envelope"] = {"findings": run_envelope_rules(_graph(), _load("bom.json"))}
+    artifacts["baseline"] = api.policy_baseline(artifacts)
+    return build_dashboard_payload(artifacts, load_peer_payload())
+
+
 @app.get("/api/graph")
 def api_graph():
-    return export_for_frontend(_graph())
+    return redact_document(export_for_frontend(_graph()), *_redaction_context())
 
 
 @app.get("/api/bom")
 def api_bom():
-    return _load("bom.json")
+    return redact_document(_load("bom.json"), *_redaction_context())
 
 
 @app.get("/api/risks")
@@ -62,9 +91,10 @@ def api_risks():
     val_path = OUT / "validator_findings.json"
     validator = json.loads(val_path.read_text(encoding="utf-8")).get("findings", []) \
         if val_path.exists() else []
-    return {"static": static_risks, "envelope": envelope, "runtime": runtime,
-            "validator": validator,
-            "total": len(static_risks) + len(envelope) + len(runtime) + len(validator)}
+    payload = {"static": static_risks, "envelope": envelope, "runtime": runtime,
+               "validator": validator,
+               "total": len(static_risks) + len(envelope) + len(runtime) + len(validator)}
+    return redact_document(payload, *_redaction_context())
 
 
 @app.get("/api/summary")
@@ -93,18 +123,25 @@ def api_summary():
 
 # ---------------- 融合接口（版本 A / L3 REST 层） ----------------
 
+@app.get("/api/peer/status")
+def api_peer_status():
+    """只读返回队友扫描状态；不会从 HTTP 请求触发扫描。"""
+    from fusion.peer_runner import read_peer_status
+    return redact_document(read_peer_status(), *_redaction_context())
+
+
 @app.get("/api/baseline")
 def api_baseline():
     """声明包络导出：队友监测系统可直接消费的判定基线。"""
     import api
-    return api.policy_baseline()
+    return redact_document(api.policy_baseline(), *_redaction_context())
 
 
 @app.post("/api/judge")
 def api_judge(events: list[dict]):
     """事件级判定入口：POST JSON 数组事件，返回逐事件判定。"""
     import api
-    return api.judge_events(events)
+    return redact_document(api.judge_events(events), *_redaction_context())
 
 
 @app.get("/api/artifacts")
@@ -113,9 +150,17 @@ def api_artifacts():
     import io
     import zipfile
     buffer = io.BytesIO()
+    context = _redaction_context()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted(OUT.rglob("*.json")):
-            zf.write(path, path.relative_to(OUT))
+            if "peer" in path.relative_to(OUT).parts:
+                continue
+            try:
+                document = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            content = json.dumps(redact_document(document, *context), ensure_ascii=False, indent=1)
+            zf.writestr(path.relative_to(OUT).as_posix(), content)
     buffer.seek(0)
     from fastapi.responses import StreamingResponse
     return StreamingResponse(

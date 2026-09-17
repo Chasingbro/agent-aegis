@@ -7,7 +7,7 @@
     "etype": {
       "enum": [
         "exposes", "mounts", "declares_allowed", "has_script", "attached_to",
-        "uses", "authenticates", "egress_to", "serves", "configures"
+        "uses", "authenticates", "egress_to", "serves", "configures", "depends_on"
       ]
     },
     "declared": {"type": "boolean"},

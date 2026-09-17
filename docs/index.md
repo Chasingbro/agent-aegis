@@ -1,7 +1,7 @@
 # 知识库导航
 
 > 本目录是项目唯一知识库（doc-keeper 维护）。**不要再在工作区其他位置新建总结/计划类 md**；
-> 新文档落位后必须回来同步本文件。最后更新：2026-09-14。
+> 新文档落位后必须回来同步本文件。最后更新：2026-09-15。
 
 ## 目录结构
 
@@ -14,12 +14,14 @@ docs/
 │   ├── range.md                        # 靶场 AgentRange 信息整理（10 章）
 │   ├── range-quickstart.md             # 靶场快速启动与回放实操（实测命令）
 │   ├── solution-quickstart.md          # 我方 demo 快速启动（静态全流程/前端/运行时/guard）
-│   └── agent-scanner.md                # 队友项目事实档案（闭集/规则/度量/实测/局限）
+│   ├── agent-scanner.md                # 队友项目事实档案（闭集/规则/度量/实测/局限）
+│   └── oss-ranges.md                   # 开源靶场台账、自有留出环境与 profile/oracle/bench
 ├── plans/                              # 计划文档（含状态标注）
 │   ├── 资产识别实施计划.md              # 第一阶段 P0-P5（已完成）
 │   ├── 资产识别优化计划清单.md          # 六维度 28 项优化 backlog（进行中）
 │   ├── 双版本发布计划.md                # v1.0-asset / v1.0-asset-guard（已完成）
-│   └── 融合与测试计划.md                # 与队友 scanner 的同靶对跑、差距、融合与测试（待评审）
+│   ├── 融合与测试计划.md                # 与队友 scanner 的融合计划（进行中，P0 已完成）
+│   └── 外部数据集反哺静态检测计划.md    # MalSkillBench/MCPTox/SkillTrustBench 反哺计划（待启动）
 ├── decisions/                          # ADR 技术决策（首个条目出现时创建，按 NNN-短标题.md）
 ├── changelog.md                        # 项目统一变更日志
 └── archive/
@@ -36,15 +38,17 @@ docs/
 | 文档 | 类型/状态 | 内容 |
 |---|---|---|
 | [challenge.md](challenge.md) | 原文 | 赛题两大能力要求与量化指标原文照录 |
-| [architecture.md](architecture.md) | 状态型，2026-09-14 | solution 现状：11 采集通道 → 图谱 → BOM → 双推理引擎 → 服务端/前端，指标与已知边界 |
+| [architecture.md](architecture.md) | 状态型，2026-09-15 | solution 现状：12 原生采集通道（9 静态 + 3 运行时，含 Package/FastMCP）+ peer runner → canonical 融合图谱 → BOM/脱敏 API |
 | [modules/range.md](modules/range.md) | 状态型，2026-09-14 | 官方靶场逐文件分析：架构、组件、风险/漏洞清单、攻击剧本、语料机制、取证点（静态识别与运行时检测的"标准答案"） |
 | [modules/range-quickstart.md](modules/range-quickstart.md) | 操作型，2026-09-14 | 靶场快速启动：依赖、4 步启动、make 的原生命令替代、场景代号与回放、攻击落地取证、guard override、排错表 |
-| [modules/solution-quickstart.md](modules/solution-quickstart.md) | 操作型，2026-09-14 | 我方 demo 快速启动：三条路径（静态 5 秒全流程+前端 / 运行时探测 / guard 代理）、实测期望值、API 速查、工件清单、8 条排错表 |
+| [modules/solution-quickstart.md](modules/solution-quickstart.md) | 操作型，2026-09-15 | 我方 demo 快速启动：原生全流程、peer-scan、融合 dashboard API、运行时探测、guard、工件与排错 |
 | [modules/agent-scanner.md](modules/agent-scanner.md) | 状态型，2026-09-14 | 队友项目 agent-scanner 事实档案：架构与数据流、13 类资产 / 9 类边 / 6 检测器、规则三层外置与 bench 度量机制、同靶实测数据、已知局限 |
+| [modules/oss-ranges.md](modules/oss-ranges.md) | 状态型，2026-09-15 | 开源 Agent/MCP 靶场台账、自有 agent-asset-lab 留出环境、目标 profile、oracle 与 bench |
 | [plans/资产识别实施计划.md](plans/资产识别实施计划.md) | 计划，已完成 | 能力 1 第一阶段：通道矩阵、ground truth、R1/R2/R3 规则、验收与时间线（实际落地差异见文首标注） |
 | [plans/资产识别优化计划清单.md](plans/资产识别优化计划清单.md) | 计划，进行中 | 六维度 28 项优化（采集/Schema/展示/证明/推理/约束）+ 5 个批次建议 + 依赖关系 + 不做清单 |
 | [plans/双版本发布计划.md](plans/双版本发布计划.md) | 计划，已完成 | A 资产识别融合版 + B 拦截代理实验版的交付计划（三层融合接口、评测对比） |
-| [plans/融合与测试计划.md](plans/融合与测试计划.md) | 计划，待评审 | 我方 solution 与队友 agent-scanner 的同靶对跑实测、逐条 ground truth 裁决、11 维度差距、融合方案 A/B、阶段 0-3 测试计划与 9 项验收门禁 |
+| [plans/融合与测试计划.md](plans/融合与测试计划.md) | 计划，进行中（P0/P1/P2 已完成） | peer runner、canonical 合并、Package/FastMCP 原生静态能力；下一阶段为 generic/profile 规则与统一 bench |
+| [plans/外部数据集反哺静态检测计划.md](plans/外部数据集反哺静态检测计划.md) | 计划，待启动 | 用 MalSkillBench/MCPTox/SkillTrustBench 的恶意维度 taxonomy 与样本反哺 generic 规则与采集器，建立靶场外的外部回归证据（约 1 周，P0–P4） |
 | [changelog.md](changelog.md) | 事件型 | v1.0-asset / v1.0-asset-guard 交付记录；新条目追加于此 |
 
 ## 代码随附文档（留在代码目录，不迁入 docs/）
