@@ -1,7 +1,7 @@
 # 知识库导航
 
 > 本目录是项目唯一知识库（doc-keeper 维护）。**不要再在工作区其他位置新建总结/计划类 md**；
-> 新文档落位后必须回来同步本文件。最后更新：2026-09-15。
+> 新文档落位后必须回来同步本文件。最后更新：2026-09-17。
 
 ## 目录结构
 
@@ -15,13 +15,14 @@ docs/
 │   ├── range-quickstart.md             # 靶场快速启动与回放实操（实测命令）
 │   ├── solution-quickstart.md          # 我方 demo 快速启动（静态全流程/前端/运行时/guard）
 │   ├── agent-scanner.md                # 队友项目事实档案（闭集/规则/度量/实测/局限）
-│   └── oss-ranges.md                   # 开源靶场台账、自有留出环境与 profile/oracle/bench
+│   ├── oss-ranges.md                   # 开源靶场台账、自有留出环境与 profile/oracle/bench
+│   └── taxonomy-comparison.md          # 恶意维度对照表（三数据集 taxonomy × generic 规则现状）
 ├── plans/                              # 计划文档（含状态标注）
 │   ├── 资产识别实施计划.md              # 第一阶段 P0-P5（已完成）
 │   ├── 资产识别优化计划清单.md          # 六维度 28 项优化 backlog（进行中）
 │   ├── 双版本发布计划.md                # v1.0-asset / v1.0-asset-guard（已完成）
-│   ├── 融合与测试计划.md                # 与队友 scanner 的融合计划（进行中，P0 已完成）
-│   └── 外部数据集反哺静态检测计划.md    # MalSkillBench/MCPTox/SkillTrustBench 反哺计划（待启动）
+│   ├── 融合与测试计划.md                # 与队友 scanner 的融合计划（P0–P3 已完成，进入前端融合准备）
+│   └── 论文对照静态检测计划.md          # 外部数据集反哺计划（P0/P1 已完成，P2 待启动）
 ├── decisions/                          # ADR 技术决策（首个条目出现时创建，按 NNN-短标题.md）
 ├── changelog.md                        # 项目统一变更日志
 └── archive/
@@ -44,11 +45,12 @@ docs/
 | [modules/solution-quickstart.md](modules/solution-quickstart.md) | 操作型，2026-09-15 | 我方 demo 快速启动：原生全流程、peer-scan、融合 dashboard API、运行时探测、guard、工件与排错 |
 | [modules/agent-scanner.md](modules/agent-scanner.md) | 状态型，2026-09-14 | 队友项目 agent-scanner 事实档案：架构与数据流、13 类资产 / 9 类边 / 6 检测器、规则三层外置与 bench 度量机制、同靶实测数据、已知局限 |
 | [modules/oss-ranges.md](modules/oss-ranges.md) | 状态型，2026-09-15 | 开源 Agent/MCP 靶场台账、自有 agent-asset-lab 留出环境、目标 profile、oracle 与 bench |
+| [modules/taxonomy-comparison.md](modules/taxonomy-comparison.md) | 状态型，2026-09-17 | P1 产出：SkillTrustBench/MalSkillBench/MCPTox taxonomy × 我方 generic 规则逐维对照（37 维），P2 规则增强排序输入 |
 | [plans/资产识别实施计划.md](plans/资产识别实施计划.md) | 计划，已完成 | 能力 1 第一阶段：通道矩阵、ground truth、R1/R2/R3 规则、验收与时间线（实际落地差异见文首标注） |
 | [plans/资产识别优化计划清单.md](plans/资产识别优化计划清单.md) | 计划，进行中 | 六维度 28 项优化（采集/Schema/展示/证明/推理/约束）+ 5 个批次建议 + 依赖关系 + 不做清单 |
 | [plans/双版本发布计划.md](plans/双版本发布计划.md) | 计划，已完成 | A 资产识别融合版 + B 拦截代理实验版的交付计划（三层融合接口、评测对比） |
-| [plans/融合与测试计划.md](plans/融合与测试计划.md) | 计划，进行中（P0/P1/P2 已完成） | peer runner、canonical 合并、Package/FastMCP 原生静态能力；下一阶段为 generic/profile 规则与统一 bench |
-| [plans/外部数据集反哺静态检测计划.md](plans/外部数据集反哺静态检测计划.md) | 计划，待启动 | 用 MalSkillBench/MCPTox/SkillTrustBench 的恶意维度 taxonomy 与样本反哺 generic 规则与采集器，建立靶场外的外部回归证据（约 1 周，P0–P4） |
+| [plans/融合与测试计划.md](plans/融合与测试计划.md) | 计划，P0–P3 已完成 | peer runner、canonical 合并、Package/FastMCP 原生静态能力、规则分层与统一 bench；下一阶段为前端融合 |
+| [plans/论文对照静态检测计划.md](plans/论文对照静态检测计划.md) | 计划，进行中（P0/P1 已完成） | 用 MalSkillBench/MCPTox/SkillTrustBench 的恶意维度 taxonomy 与样本反哺 generic 规则与采集器，建立靶场外的外部回归证据（P0–P4） |
 | [changelog.md](changelog.md) | 事件型 | v1.0-asset / v1.0-asset-guard 交付记录；新条目追加于此 |
 
 ## 代码随附文档（留在代码目录，不迁入 docs/）
