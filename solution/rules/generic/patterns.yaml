@@ -68,3 +68,110 @@ popular_mcp_servers:
   - google-maps
   - fetch
 name_similarity_threshold: 0.9
+
+# ===== P2 脚本级行为模式（taxonomy-comparison.md §4 清单；来源：MalSkillBench B 系 / SkillTrustBench T 系） =====
+# 恶意级（malicious_skill 类别）：持久化 / 下载执行 / 反弹 shell / 挖矿 / 勒索 / 提权 / 定时炸弹 / 混淆
+# 可疑级（无 malicious 类别，suspicious 口径）：破坏性操作 / 代码内硬编码密钥
+
+# 持久化写入（MSB B5 / STB T06, PY_PYTHON_PERSIST）
+persistence_patterns:
+  - "crontab|/etc/cron\\.(?:d|daily|hourly|weekly|monthly)"
+  - "(?:^|\\W)\\.(?:bashrc|bash_profile|profile)\\b|/etc/profile\\.d"
+  - "systemctl|systemd/system|rc\\.local|LaunchAgents?/"
+  - "schtasks|New-Service\\b"
+
+# 远程载荷下载执行（MSB B3/B4 + MIXED 策略 / STB T03, E1-E4）
+download_exec_patterns:
+  - "curl[^|;\\n]*\\|\\s*(?:ba|z|da)?sh\\b"
+  - "wget[^|;\\n]*\\|\\s*(?:ba|z|da)?sh\\b"
+  - "(?:curl|wget)[^\\n]*&&\\s*(?:ba|z)?sh\\b"
+  - "(?:urlopen|requests\\.get|httpx\\.get)\\([^)]*\\)[^\\n]{0,60}(?:eval|exec|subprocess|os\\.system)"
+  - "pip\\s+install\\s+(?:git\\+)?https?://"
+  - "npm\\s+(?:i|install)\\b[^\\n]*https?://"
+  - "downloadstring|\\.downloadfile"
+
+# 反弹 shell（MSB B6 / STB T03 子型）
+reverse_shell_patterns:
+  - "/dev/tcp/|(?:ba|z)?sh\\s+-i\\s+>&"
+  - "pty\\.spawn"
+  - "socket[^\\n]{0,80}/bin/(?:ba|z)?sh"
+  - "(?:^|\\W)n(?:c|cat)\\s+-e\\b"
+  - "mkfifo[^\\n]*\\|\\s*(?:ba)?sh"
+
+# 资源滥用/挖矿（MSB B8）
+cryptomining_patterns:
+  - "xmrig|stratum\\+tcp|cryptonight"
+  - "(?:^|\\W)(?:minerd|nanopool|supportxmr)\\b"
+
+# 提权（MSB B9 / STB T05, PE1-PE3）
+privilege_escalation_patterns:
+  - "chmod[^\\n]{0,40}[24][0-7]{3}\\b"
+  - "chmod\\s+[^\\n]*\\+s\\b"
+  - "sudo\\s+(?:-i|bash|sh|su|chmod|chown)\\b"
+  - "(?:^|\\W)(?:setuid|setgid)\\b"
+  - "cap_add\\s*:[^\\n]*SYS_(?:ADMIN|NET_RAW)|privileged\\s*:\\s*true"
+
+# 勒索话术（MSB B7）
+ransomware_patterns:
+  - "(?:^|\\W)ransom(?:ware)?\\b"
+  - "how_to_decrypt|readme.*decrypt|your files have been encrypted"
+
+# 定时炸弹（STB DT_TIMEBOMB）：日期比较锚定未来年份，避开常规过期检查
+timebomb_patterns:
+  - "(?:datetime|date)\\.(?:now|today|utcnow)\\(\\)[^\\n]{0,60}(?:<|>|==|>=|<=)[^\\n]{0,40}20[3-9]\\d"
+  - "time\\.sleep\\(\\s*[0-9]{6,}"
+
+# 多层混淆（STB OB_STRING_OBFUSC / EV_EVAL_BYPASS）；base64 单独出现在良性代码常见，
+# 由 b64_payloads 通道按解码后内容判定，不在此组
+obfuscation_patterns:
+  - "marshal\\.loads"
+  - "zlib\\.decompress[^\\n]{0,40}(?:exec|eval|compile)"
+  - "(?:exec|eval)\\(\\s*(?:bytes|bytearray|base64|b64decode|zlib|marshal|codecs)"
+  - "codecs\\.decode\\([^,]{1,60},\\s*['\"]rot13['\"]"
+
+# 破坏性操作，无确认（STB V_DESTRUCTIVE_NO_CONFIRM —— suspicious 级）
+destructive_patterns:
+  - "rm\\s+-[rf]{2}\\s+/(?:\\s|$|boot|etc|usr|var)"
+  - "mkfs\\b|dd\\s+if=/dev/(?:zero|random)\\s+of=/dev/"
+  - "drop\\s+table\\b|truncate\\s+table\\b"
+  - "shutdown\\s+(?:-h|now)\\b|reboot\\s+now\\b"
+
+# 代码内硬编码密钥（MSB B2 相邻 / STB V_HARDCODED_SECRET —— suspicious 级）
+hardcoded_secret_patterns:
+  - "(?:api[_-]?key|secret|token|password|passwd|webhook|private[_-]?key)\\s*[=:]\\s*['\"][A-Za-z0-9+/=_.\\-]{12,}['\"]"
+  - "-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"
+
+# ===== P2 指令层模式（MSB B13 / STB T01 子型） =====
+# 系统提示词泄露诱导：作用于 Skill/工具描述与隐藏注释
+prompt_leak_patterns:
+  - "(?:reveal|show|print|repeat|output|leak|dump|recite|display).{0,40}(?:system prompt|your prompt|initial prompt|instructions above|original instructions)"
+  - "(?:repeat|output|print).{0,30}everything.{0,20}(?:above|before|prior)"
+  - "what\\s+(?:were|are|was)\\s+you\\s+(?:told|instructed|given|configured)"
+  - "(?:泄露|复述|透露|输出).{0,16}(?:系统提示词?|系统指令|初始提示)"
+
+# 零宽/双向控制字符隐写（MSB PI-Steganographic 相邻；STB encoding 字段）
+zero_width_pattern: "[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]"
+
+# ===== P2 依赖面（STB T08 / V_UNSAFE_DEP_SOURCE） =====
+popular_packages:
+  - requests
+  - urllib3
+  - numpy
+  - scipy
+  - pandas
+  - flask
+  - fastapi
+  - django
+  - pillow
+  - cryptography
+  - pyyaml
+  - httpx
+  - rich
+  - click
+  - typer
+  - pydantic
+  - sqlalchemy
+  - redis
+  - celery
+  - pytest
+package_name_similarity_threshold: 0.8

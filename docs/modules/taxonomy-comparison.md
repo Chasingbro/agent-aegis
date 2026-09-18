@@ -128,3 +128,28 @@
 - **MCPTox**：P1/P2/P3 范式 3/3 落表（→#1/#25/#36）；后果类完整枚举在论文表格中不可自动提取（v1 正文 10 类与 11 类表述亦有出入），已核实示例（Privacy Leakage、Message Hijacking、SSH key 外泄）分别映射 #19/#7/#18；如 P2 需要逐类规则，人工读 AAAI 版表格后补录。
 - **其他备注**：STB 官网宣传页的"5 层依赖 A–E"在数据集卡与 ground_truth.json 中均无可核实定义，P1 以数据集卡实际给出的 9 行 Agent Dependency 攻击面为准；MalSkillBench 数字均以其 README 为准（无 license，外部参考）。
 - **验收结论**：第一梯队三家 taxonomy 的全部顶级维度均已落表，无"未评估"残留。✅
+
+## 6. P2 落地回写（2026-09-18）
+
+tier-1/tier-2 规则已实现（详见 [计划 P2 节](../plans/论文对照静态检测计划.md)），维度状态变化：
+
+| 维度 | P1 处置 | P2 后 | 落地规则 id |
+|---|---|---|---|
+| #5 提示词泄露 | ➕ | ✅ | `skill-prompt-leak` / `hidden-comment-prompt-leak` / `tool-prompt-leak` |
+| #9 隐写载体（零宽部分） | 🟡 | ✅（零宽/双向控制字符） | `invisible-unicode-text`（ANSI 原有） |
+| #12 下载执行链 | ➕ | ✅ | `script-download-exec` |
+| #13 反弹 shell | ➕ | ✅ | `script-reverse-shell` |
+| #14 持久化 | ➕ | ✅ | `script-persistence` |
+| #15 勒索 | ➕ | ✅ | `script-ransomware` |
+| #16 挖矿 IOC | ➕ | ✅ | `script-cryptomining` |
+| #17/#30 提权与权限位 | ➕ | ✅ | `script-privilege-escalation`（文件系统权限位含 destructive 部分覆盖） |
+| #20 定时炸弹 | ➕ | ✅ | `script-timebomb`（锚定未来年份，规避常规过期检查） |
+| #21 多层混淆 | ➕ | ✅ | `script-obfuscation`（base64 单独出现仍由 b64 通道按解码内容判定） |
+| #22 破坏性操作 | ➕ | ✅（suspicious 级） | `script-destructive`（无 malicious 类别） |
+| #23 依赖面规则 | 🔧 | ✅ | `unsafe-package-source` + `package-name-similarity` |
+| #24 包名相似度 | ➕ | ✅ | 同上（换位型仿冒为 SequenceMatcher 盲区，见计划备注） |
+| #28 代码内硬编码密钥 | ➕ | ✅（suspicious 级） | `script-hardcoded-secret` |
+
+**维持不变**：#8 记忆 API 面、#11 Skill AST（有意延期）；#7 字面弱规则与 #18 凭据单独读取、
+#31 过度遥测（误报敏感，暂缓，#7/#18 的语义部分与 #35/#36 运行时确证维持静态边界）。
+统计更新：✅已有 10→24，➕12→3，🔧3→2。

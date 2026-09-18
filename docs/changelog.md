@@ -2,6 +2,35 @@
 
 > 项目统一变更日志：**新条目只追加在这里**（最新在上，含日期、改动摘要、涉及模块）。
 
+## P2 规则与采集器增强完成（2026-09-18）
+
+- `solution/rules/generic/patterns.yaml` 新增 13 组通用模式（均带来源数据集标注，无靶场字面量）：
+  脚本行为 10 组（persistence / download-exec / reverse-shell / cryptomining /
+  privilege-escalation / ransomware / timebomb / obfuscation / destructive /
+  hardcoded-secret）+ 指令层 2 组（prompt-leak / zero-width）+ 依赖面
+  （popular_packages 名录与 0.8 相似度阈值）。
+- `solution/collect_static.py`：新增 `scan_script_behaviors`（Skill 脚本与插件全文行为扫描）、
+  `prompt_leak_hits`、`has_invisible_unicode`（描述/注释/工具描述面）；packages 依赖
+  `unsafe-package-source` 与 `package-name-similarity` 规则——**依赖面风险规则从 0 到 1**
+  （P1 盘点确认 packages[] 已采集但零规则消费）。
+- 类别纪律：恶意级 8 组带 `malicious_skill` 类别与 `malicious_type`；可疑级
+  （destructive/hardcoded-secret）不带 malicious 类别，不进 bench 负样本误报口径
+  （SkillTrustBench suspicious 三级口径对齐）。
+- 新增 `solution/tests/test_generic_rules.py` 15 项（分组正负样本 + run_rules 集成 +
+  良性零误报断言）。**验证：全量 64 passed / 3 skipped**；agent-asset-lab bench
+  10/10 资产、5/5 风险、0 误报；simulated-target 11/11、6/6、0 误报 0 extra——均与
+  P3 基线一致；官方靶场扫描与改动前逐项一致，诱饵三项零告警。
+- ⚠️ 回归中发现基线漂移（先于本阶段，stash 对照验证）：`AgentRange-player/.env`
+  存在时官方靶场对账 23/24（weak-secret 4≠2，.env 内 LANGFLOW_SUPERUSER_PASSWORD
+  与 OPENAI_API_KEY 两个额外弱密钥）；复现 24/24 需临时移走 `.env` 或后续修
+  对账预期。非规则回归，未在本阶段修改。
+- 有意延期与已知限制记录于计划 P2 节（记忆 API / Skill AST / 过度遥测；换位型
+  包名仿冒为 SequenceMatcher 盲区）。
+
+涉及模块：`solution/rules/generic/patterns.yaml`、`solution/collect_static.py`、
+`solution/tests/test_generic_rules.py`、`docs/plans/论文对照静态检测计划.md`、
+`docs/modules/taxonomy-comparison.md`（§6 落地回写）。
+
 ## 队友项目 agent-scanner 新版本核查与事实档案更新（2026-09-17）
 
 - `reference/agent-scanner/` 拉取队友新版（拷贝件无 git 历史，对比基准为档案 09-14 版）：

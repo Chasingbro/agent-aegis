@@ -77,6 +77,62 @@ def has_ansi_invisible(text: str, rules: dict | None = None) -> str | None:
     return None
 
 
+def prompt_leak_hits(text: str, rules: dict | None = None) -> list[str]:
+    """系统提示词泄露诱导（MSB B13 / STB T01 子型，P2 指令层）。"""
+    rules = rules or loader.load()
+    return [p for p in rules.get("prompt_leak_patterns", [])
+            if re.search(p, text, re.IGNORECASE | re.DOTALL)]
+
+
+def has_invisible_unicode(text: str, rules: dict | None = None) -> str | None:
+    """零宽/双向控制字符隐写（区别于 ANSI 转义序列通道）。"""
+    rules = rules or loader.load()
+    pattern = rules.get("zero_width_pattern")
+    if pattern and re.search(pattern, text):
+        return pattern
+    return None
+
+
+# P2 脚本行为分组 -> 风险语义映射（模式本体外置于 rules/generic/patterns.yaml；
+# 来源标注见该文件分组注释）。suspicious 级不带 malicious_* 类别（STB suspicious 口径）。
+SCRIPT_BEHAVIOR_GROUPS = [
+    ("script-persistence", "persistence_patterns", "持久化写入（cron/bashrc/systemd/计划任务）",
+     "CWE-506 / MSB B5 / STB T06", "high", "malicious_skill", "persistence", 0.9),
+    ("script-download-exec", "download_exec_patterns", "远程载荷下载执行链",
+     "CWE-494 / MSB B3,B4 / STB T03", "high", "malicious_skill", "code_execution", 0.9),
+    ("script-reverse-shell", "reverse_shell_patterns", "反弹 shell 特征",
+     "CWE-78 / MSB B6", "high", "malicious_skill", "code_execution", 0.9),
+    ("script-cryptomining", "cryptomining_patterns", "挖矿/资源滥用 IOC",
+     "MSB B8", "high", "malicious_skill", "resource_abuse", 0.85),
+    ("script-ransomware", "ransomware_patterns", "勒索话术特征",
+     "MSB B7", "high", "malicious_skill", "ransomware", 0.85),
+    ("script-privilege-escalation", "privilege_escalation_patterns", "提权特征（SUID/sudo/特权容器）",
+     "CWE-269 / MSB B9 / STB T05", "high", "malicious_skill", "privilege_escalation", 0.85),
+    ("script-timebomb", "timebomb_patterns", "基于未来日期/长时延时的定时触发",
+     "STB DT_TIMEBOMB", "high", "malicious_skill", "supply_chain", 0.8),
+    ("script-obfuscation", "obfuscation_patterns", "多层混淆执行（marshal/zlib/rot13/exec 链）",
+     "CWE-506 / STB OB_STRING_OBFUSC", "medium", "malicious_skill", "obfuscation", 0.8),
+    ("script-destructive", "destructive_patterns", "无确认破坏性操作",
+     "STB V_DESTRUCTIVE_NO_CONFIRM", "medium", "", "", None),
+    ("script-hardcoded-secret", "hardcoded_secret_patterns", "代码内硬编码密钥",
+     "CWE-798 / STB V_HARDCODED_SECRET", "medium", "", "", None),
+]
+
+
+def scan_script_behaviors(text: str, rules: dict) -> list[dict]:
+    """按行为分组扫描脚本全文，每组返回一次命中（模式列表并入证据）。"""
+    hits = []
+    for rule_id, key, title, ref, severity, category, mtype, confidence in SCRIPT_BEHAVIOR_GROUPS:
+        patterns = [p for p in rules.get(key, [])
+                    if re.search(p, text, re.IGNORECASE | re.DOTALL)]
+        if patterns:
+            hits.append({"rule_id": rule_id, "title": title, "ref": ref,
+                         "severity": severity, "category": category,
+                         "malicious_type": mtype, "confidence": confidence,
+                         "patterns": patterns})
+    return hits
+
+
 def is_weak_value(value: str, rules: dict | None = None) -> str | None:
     rules = rules or loader.load()
     for pat in rules.get("weak_value_patterns", []):
@@ -774,6 +830,17 @@ def run_rules(bundle: dict, rules: dict | None = None, *, use_profile: bool = Tr
                     "desc-poisoning", f"tool:{srv['server']}.{tool['name']}", src,
                     f"工具描述含注入指令结构 {hits}：{tool['description'][:80]}",
                     "OWASP LLM01 / CWE-74", "high"))
+            tool_leak = prompt_leak_hits(tool["description"] or "", rules)
+            if tool_leak:
+                risks.append(finding(
+                    "tool-prompt-leak", f"tool:{srv['server']}.{tool['name']}", src,
+                    f"工具描述含提示词泄露诱导 {tool_leak}",
+                    "OWASP LLM01 / CWE-200", "high"))
+            tool_invisible = has_invisible_unicode(tool["description"] or "", rules)
+            if tool_invisible:
+                risks.append(finding(
+                    "invisible-unicode-text", f"tool:{srv['server']}.{tool['name']}", src,
+                    "工具描述含零宽/双向控制字符（隐写载体）", "CWE-1006", "high"))
             if tool["hidden"]:
                 risks.append(finding(
                     "hidden-tool", f"tool:{srv['server']}.{tool['name']}", src,
@@ -823,6 +890,20 @@ def run_rules(bundle: dict, rules: dict | None = None, *, use_profile: bool = Tr
             risk.update({"category": "malicious_skill", "malicious_type": "prompt_injection",
                          "confidence": 0.9})
             risks.append(risk)
+        leak = prompt_leak_hits(description, rules)
+        if leak:
+            risk = finding(
+                "skill-prompt-leak", f"skill:{skill['name']}", skill["source"],
+                f"Skill 描述含系统提示词泄露诱导 {leak}",
+                "OWASP LLM01 / CWE-200", "high")
+            risk.update({"category": "malicious_skill", "malicious_type": "prompt_leak",
+                         "confidence": 0.85})
+            risks.append(risk)
+        invisible = has_invisible_unicode(description, rules)
+        if invisible:
+            risks.append(finding(
+                "invisible-unicode-text", f"skill:{skill['name']}", skill["source"],
+                "Skill 描述含零宽/双向控制字符（隐写载体）", "CWE-1006", "high"))
         for comment in skill["hidden_comments"]:
             hits = looks_injected(comment, rules)
             if hits:
@@ -830,6 +911,12 @@ def run_rules(bundle: dict, rules: dict | None = None, *, use_profile: bool = Tr
                     "hidden-comment-injection", f"skill:{skill['name']}", skill["source"],
                     f"正文 HTML 注释含指令内容 {hits}：{comment.strip()[:100]}",
                     "OWASP LLM01 / CWE-74", "high"))
+            comment_leak = prompt_leak_hits(comment, rules)
+            if comment_leak:
+                risks.append(finding(
+                    "hidden-comment-prompt-leak", f"skill:{skill['name']}", skill["source"],
+                    f"正文 HTML 注释含提示词泄露诱导 {comment_leak}",
+                    "OWASP LLM01 / CWE-200", "high"))
         for script in skill["scripts"]:
             script_text = (root / script["path"]).read_text(encoding="utf-8", errors="replace")
             sensitive_read = bool(re.search(r"(?:open|read_text)\s*\(", script_text, re.IGNORECASE)
@@ -853,6 +940,16 @@ def run_rules(bundle: dict, rules: dict | None = None, *, use_profile: bool = Tr
                 risk.update({"category": "malicious_skill", "malicious_type": "supply_chain",
                              "confidence": 0.9})
                 risks.append(risk)
+            for behavior in scan_script_behaviors(script_text, rules):
+                risk = finding(
+                    behavior["rule_id"], script["path"], script["path"],
+                    f"Skill 脚本命中{behavior['title']}：{behavior['patterns']}",
+                    behavior["ref"], behavior["severity"])
+                if behavior["category"]:
+                    risk.update({"category": behavior["category"],
+                                 "malicious_type": behavior["malicious_type"],
+                                 "confidence": behavior["confidence"]})
+                risks.append(risk)
 
     for plugin in bundle.get("plugins", []):
         for payload in plugin["b64_payloads"]:
@@ -860,6 +957,12 @@ def run_rules(bundle: dict, rules: dict | None = None, *, use_profile: bool = Tr
                 "obfuscated-payload", f"plugin:{plugin['name']}", plugin["source"],
                 f"插件 Base64 载荷命中 {payload['dangerous_patterns']}："
                 f"{payload['decoded'][:100]}", "CWE-506", "high"))
+        plugin_text = (root / plugin["source"]).read_text(encoding="utf-8", errors="replace")
+        for behavior in scan_script_behaviors(plugin_text, rules):
+            risks.append(finding(
+                behavior["rule_id"], f"plugin:{plugin['name']}", plugin["source"],
+                f"插件脚本命中{behavior['title']}：{behavior['patterns']}",
+                behavior["ref"], behavior["severity"]))
 
     for page in bundle.get("web_pages", []):
         for comment in page["hidden_comments"]:
@@ -889,6 +992,28 @@ def run_rules(bundle: dict, rules: dict | None = None, *, use_profile: bool = Tr
                 "远程 MCP endpoint 未声明认证信息", "CWE-306", "high")
             risk.update({"category": "misconfig", "confidence": 0.9})
             risks.append(risk)
+
+    # --- P2 依赖面：不安全来源与包名相似度（STB T08 / V_UNSAFE_DEP_SOURCE） ---
+    popular_packages = sorted(set(rules.get("popular_packages", [])))
+    package_threshold = float(rules.get("package_name_similarity_threshold", 0.8))
+    declared_names = {pkg.get("name", "") for pkg in bundle.get("packages", [])}
+    for pkg in bundle.get("packages", []):
+        name = pkg.get("name", "")
+        spec = str(pkg.get("version_spec") or "")
+        source_file = (pkg.get("sources") or [{}])[0].get("file", "")
+        if re.match(r"@\s*(?:git\+)?http://", spec):
+            risks.append(finding(
+                "unsafe-package-source", f"package:{name}", source_file,
+                f"依赖 {name} 来自未加密直接来源 {spec[:60]}",
+                "CWE-494 / STB T08", "medium"))
+        for known, score in name_similarity_hits(name, popular_packages,
+                                                  threshold=package_threshold, rules=rules):
+            if known in declared_names:
+                continue
+            risks.append(finding(
+                "package-name-similarity", f"package:{name}", source_file,
+                f"依赖名 '{name}' 与知名包 '{known}' 相似度 {score}，疑似名称混淆",
+                "CWE-1006 / STB T08", "medium"))
 
     # --- R1 配置风险（env 文件 + compose environment 合并扫描）---
     env_entries = list(bundle["env_items"])
